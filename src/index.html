@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<title>Aurea Studio</title>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' app: data: blob:; img-src 'self' app: data: blob: https:; style-src 'self' 'unsafe-inline' app:; font-src 'self' app: data:; script-src 'self' app:">
+<script src="theme-init.js"></script>
+<link rel="stylesheet" href="fonts/fonts.css">
+<link rel="stylesheet" href="player.css">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<div class="aura"><i></i><i></i><i></i></div>
+<div id="splash"><div class="sp-mark"><svg viewBox="0 0 24 24" fill="none" stroke="#e7cf93" stroke-width="1.2" stroke-linecap="round"><path class="sp-arch" d="M6 21V11a6 6 0 0 1 12 0v10"/><path class="sp-base" d="M4 21h16"/><path class="sp-gem" d="m12 9 2 3-2 3-2-3z" fill="#7d1f2b"/></svg></div><div class="sp-name">Aurea Studio</div></div>
+
+<header id="topbar">
+  <button class="logo" id="logoBtn" title="Меню">
+    <span class="mark"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e7cf93" stroke-width="2.2" stroke-linecap="round"><path d="M6 21V11a6 6 0 0 1 12 0v10"/><path d="M4 21h16"/><path d="m12 9 2 3-2 3-2-3z" fill="#7d1f2b" stroke-width="1.4"/></svg></span>
+    <b>Aurea Studio</b>
+  </button>
+  <input class="doc-title hidden" id="docTitle" spellcheck="false" title="Назва презентації">
+  <div class="tools hidden" id="tools">
+    <div class="tgroup">
+      <button class="vbtn" data-act="menu-text" title="Текст (T)"><svg data-i="text"></svg><span>Текст</span></button>
+      <button class="vbtn" data-act="menu-shape" title="Фігура (R)"><svg data-i="shapes"></svg><span>Фігура</span></button>
+      <button class="vbtn" data-act="menu-image" title="Зображення (I)"><svg data-i="image"></svg><span>Фото</span></button>
+      <button class="vbtn" data-act="menu-icon" title="Іконка"><svg data-i="sparkle2"></svg><span>Іконка</span></button>
+      <button class="vbtn" data-act="menu-chart" title="Діаграма"><svg data-i="chart"></svg><span>Діаграма</span></button>
+      <button class="vbtn" data-act="line" title="Лінія (L)"><svg data-i="line"></svg><span>Лінія</span></button>
+      <button class="vbtn" data-act="counter" title="Число з лічильником"><svg data-i="hash"></svg><span>Число</span></button>
+    </div>
+    <div class="tgroup">
+      <button class="vbtn" data-act="undo" id="undoBtn" title="Скасувати (Ctrl+Z)"><svg data-i="undo"></svg><span>Назад</span></button>
+      <button class="vbtn" data-act="redo" id="redoBtn" title="Повторити (Ctrl+Y)"><svg data-i="redo"></svg><span>Вперед</span></button>
+    </div>
+  </div>
+  <div class="viewer-tools hidden no-drag" id="viewerTools">
+    <span class="sep"></span>
+    <button class="tbtn" data-act="viewer-close" title="Повернутися до студії"><svg data-i="left"></svg>Студія</button>
+    <span class="vt-badge">Перегляд</span>
+    <span class="vt-name" id="viewerName"></span>
+  </div>
+  <div class="spacer"></div>
+  <button class="theme-toggle" id="themeBtn" title="Світла / темна тема"><svg class="s" data-i="sun"></svg><svg class="m" data-i="moon"></svg><i></i></button>
+  <div class="no-drag hidden" id="viewerRight" style="display:flex;gap:6px;align-items:center">
+    <button class="tbtn icon" data-act="viewer-reload" title="Перезавантажити"><svg data-i="restore"></svg></button>
+    <button class="tbtn" data-act="viewer-folder" title="Показати файл у папці"><svg data-i="folder"></svg>У папці</button>
+    <button class="btn-primary" data-act="viewer-full" title="Повний екран (F11). Вихід — Esc"><svg data-i="expand"></svg>Повний екран</button>
+  </div>
+  <div class="save-chip hidden" id="saveChip"><i></i><span>Збережено</span></div>
+  <div class="no-drag hidden" id="rightTools" style="display:flex;gap:6px;align-items:center">
+    <button class="tbtn icon" data-act="preview" title="Переглянути анімації слайда"><svg data-i="sparkles"></svg></button>
+    <button class="tbtn" data-act="menu-export" title="Експорт"><svg data-i="export"></svg>Експорт</button>
+    <button class="btn-primary" data-act="show" title="Показ (F5)"><svg data-i="play"></svg>Показ</button>
+    <button class="tbtn icon" data-act="menu-show" title="Варіанти показу"><svg data-i="chev"></svg></button>
+  </div>
+</header>
+
+<main id="editor" class="hidden">
+  <aside id="strip" class="panel glass">
+    <div class="phead"><span>Слайди</span><span id="slideCount"></span></div>
+    <div class="list" id="slideList"></div>
+    <div class="strip-foot">
+      <button class="btn sm" data-act="menu-newslide" title="Новий слайд (Ctrl+M)"><svg data-i="plus"></svg>Слайд</button>
+      <button class="btn sm" data-act="dupslide" title="Дублювати для morph (Ctrl+Shift+D)"><svg data-i="copy"></svg>Дубль</button>
+    </div>
+  </aside>
+  <section id="work">
+    <div id="canvasWrap">
+      <div id="viewport">
+        <div id="stageHost" class="a-stage"></div>
+        <div id="overlay"></div>
+      </div>
+    </div>
+    <div id="notesPane"></div>
+    <div id="statusbar">
+      <span id="slideInfo"></span>
+      <div class="spacer"></div>
+      <button class="tbtn icon" data-act="notes" title="Нотатки доповідача (Ctrl+Shift+N)"><svg data-i="notes"></svg></button>
+      <button class="tbtn icon" data-act="overview" title="Сортувальник слайдів (G)"><svg data-i="grid"></svg></button>
+      <button class="tbtn icon" data-act="reading" title="Режим читання"><svg data-i="book"></svg></button>
+      <button class="tbtn icon" data-act="palette" title="Палітра команд (Ctrl+K)"><svg data-i="command"></svg></button>
+      <button class="tbtn icon" data-act="gridlines" id="gridBtn" title="Сітка"><svg data-i="hashgrid"></svg></button>
+      <button class="tbtn icon on" data-act="snap" id="snapBtn" title="Прилипання та напрямні"><svg data-i="magnet"></svg></button>
+      <span class="sep"></span>
+      <button class="tbtn icon" data-act="zoomout" title="Зменшити"><svg data-i="minus"></svg></button>
+      <button class="tbtn zoomv" data-act="zoomfit" id="zoomVal" title="Вмістити">100%</button>
+      <button class="tbtn icon" data-act="zoomin" title="Збільшити"><svg data-i="plus"></svg></button>
+      <span class="sep"></span>
+      <button class="tbtn icon" data-act="help" title="Гарячі клавіші (F1)"><svg data-i="keyboard"></svg></button>
+    </div>
+  </section>
+  <aside id="props" class="panel glass">
+    <div class="tabs" id="tabs">
+      <button class="tab" data-tab="design">Дизайн</button>
+      <button class="tab" data-tab="anim">Анімація</button>
+      <button class="tab" data-tab="slide">Слайд</button>
+      <button class="tab" data-tab="layers">Шари</button>
+    </div>
+    <div class="pbody" id="pbody"></div>
+  </aside>
+</main>
+
+<div id="start"></div>
+<div id="viewerFrame" class="glass hidden"><div class="spinner"></div><span>Відкриваю презентацію…</span></div>
+<div id="dropHint" class="hidden"><div><svg data-i="export"></svg><b>Відпустіть файл</b><span>.html — перегляд і показ · .aurea — редагування</span></div></div>
+
+<div id="show">
+  <div class="show-stage" id="showStage"></div>
+  <div class="prog" id="showProg"></div>
+  <div class="black"></div>
+  <div class="pp" id="pp"></div>
+  <div class="hud">
+    <button class="tbtn icon" data-sact="prev" title="Назад"><svg data-i="left"></svg></button>
+    <span class="cnt" id="showCnt"></span>
+    <button class="tbtn icon" data-sact="next" title="Далі"><svg data-i="right"></svg></button>
+    <button class="tbtn icon" data-sact="presenter" title="Панель доповідача (P)"><svg data-i="presenter"></svg></button>
+    <button class="tbtn icon" data-sact="exit" title="Вийти (Esc)"><svg data-i="x"></svg></button>
+  </div>
+</div>
+
+<div id="toast"></div>
+<input type="file" id="fileImg" accept="image/*" multiple class="hidden">
+
+<script src="vendor/jszip.min.js"></script>
+<script src="vendor/pptxgen.bundle.js"></script>
+<script src="player.js"></script>
+<script src="templates.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

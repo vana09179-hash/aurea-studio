@@ -1,0 +1,122 @@
+{
+  "name": "aurea-studio",
+  "productName": "Aurea Studio",
+  "version": "1.0.0",
+  "description": "Aurea Studio — редактор анімованих презентацій",
+  "main": "main.js",
+  "author": {
+    "name": "Aurea",
+    "email": "aurea@example.invalid"
+  },
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win portable",
+    "dist:win": "electron-builder --win portable",
+    "dist:linux": "electron-builder --linux AppImage tar.gz",
+    "dist:mac": "electron-builder --mac dmg zip"
+  },
+  "build": {
+    "appId": "app.aurea.studio",
+    "productName": "Aurea Studio",
+    "artifactName": "AureaStudio-${version}-portable.exe",
+    "files": [
+      "main.js",
+      "preload.js",
+      "src/**/*"
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "fileAssociations": [
+      {
+        "ext": "aurea",
+        "name": "Aurea Presentation",
+        "role": "Editor",
+        "mimeType": "application/x-aurea"
+      }
+    ],
+    "win": {
+      "target": "portable",
+      "icon": "build/icon.png"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "tar.gz"
+      ],
+      "category": "Office",
+      "icon": "build/icon.png",
+      "executableName": "aurea-studio",
+      "artifactName": "AureaStudio-${version}-linux-${arch}.${ext}",
+      "synopsis": "Редактор анімованих презентацій",
+      "mimeTypes": [
+        "application/x-aurea"
+      ],
+      "desktop": {
+        "entry": {
+          "Name": "Aurea Studio",
+          "Comment": "Анімовані презентації",
+          "StartupWMClass": "Aurea Studio"
+        }
+      }
+    },
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "category": "public.app-category.productivity",
+      "icon": "build/icon.png",
+      "artifactName": "AureaStudio-${version}-mac-${arch}.${ext}",
+      "identity": null
+    }
+  },
+  "devDependencies": {
+    "@fontsource-variable/alegreya": "^5.3.0",
+    "@fontsource-variable/caveat": "^5.3.0",
+    "@fontsource-variable/comfortaa": "^5.3.0",
+    "@fontsource-variable/cormorant-garamond": "^5.3.0",
+    "@fontsource-variable/eb-garamond": "^5.3.0",
+    "@fontsource-variable/exo-2": "^5.3.0",
+    "@fontsource-variable/golos-text": "^5.3.0",
+    "@fontsource-variable/inter": "^5.3.0",
+    "@fontsource-variable/jetbrains-mono": "^5.3.0",
+    "@fontsource-variable/jost": "^5.3.0",
+    "@fontsource-variable/lora": "^5.3.0",
+    "@fontsource-variable/manrope": "^5.3.0",
+    "@fontsource-variable/montserrat": "^5.3.0",
+    "@fontsource-variable/noto-sans": "^5.3.0",
+    "@fontsource-variable/noto-serif": "^5.3.0",
+    "@fontsource-variable/nunito": "^5.3.0",
+    "@fontsource-variable/onest": "^5.3.1",
+    "@fontsource-variable/open-sans": "^5.3.0",
+    "@fontsource-variable/oswald": "^5.3.0",
+    "@fontsource-variable/playfair-display": "^5.3.0",
+    "@fontsource-variable/raleway": "^5.3.0",
+    "@fontsource-variable/roboto": "^5.3.0",
+    "@fontsource-variable/roboto-mono": "^5.3.0",
+    "@fontsource-variable/roboto-slab": "^5.3.0",
+    "@fontsource-variable/rubik": "^5.3.0",
+    "@fontsource-variable/unbounded": "^5.3.0",
+    "@fontsource/amatic-sc": "^5.3.0",
+    "@fontsource/fira-sans": "^5.3.0",
+    "@fontsource/lobster": "^5.3.0",
+    "@fontsource/marck-script": "^5.3.0",
+    "@fontsource/pacifico": "^5.3.0",
+    "@fontsource/philosopher": "^5.3.0",
+    "@fontsource/play": "^5.3.0",
+    "@fontsource/poiret-one": "^5.3.0",
+    "@fontsource/prata": "^5.3.0",
+    "@fontsource/pt-sans": "^5.3.0",
+    "@fontsource/pt-serif": "^5.3.0",
+    "@fontsource/russo-one": "^5.3.0",
+    "@fontsource/ubuntu": "^5.3.0",
+    "@fontsource/yeseva-one": "^5.3.0",
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8",
+    "jszip": "^3.10.2",
+    "pptxgenjs": "^4.0.1"
+  },
+  "homepage": "https://example.invalid/aurea-studio"
+}

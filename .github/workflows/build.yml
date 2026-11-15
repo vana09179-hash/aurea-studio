@@ -1,0 +1,40 @@
+name: Build Aurea Studio (Windows, macOS, Linux)
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            args: --win portable
+          - os: macos-latest
+            args: --mac dmg zip --x64 --arm64
+          - os: ubuntu-latest
+            args: --linux AppImage tar.gz
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx electron-builder ${{ matrix.args }} --publish never
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AureaStudio-${{ runner.os }}
+          path: |
+            dist/*.exe
+            dist/*.dmg
+            dist/*.zip
+            dist/*.AppImage
+            dist/*.tar.gz
+          if-no-files-found: error
