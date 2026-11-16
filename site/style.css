@@ -289,3 +289,4 @@ details p{overflow:hidden}
 footer{opacity:.0;transform:translateY(10px);transition:opacity .8s var(--ease),transform .8s var(--ease)}
 footer.in{opacity:1;transform:none}
 @media (prefers-reduced-motion:reduce){.words .w,.formats b,footer{opacity:1!important;transform:none!important;filter:none!important}.dl.mine{animation:none}}
+.brand img{width:28px;height:28px;border-radius:7px;box-shadow:0 4px 12px rgba(42,35,72,.25)}
