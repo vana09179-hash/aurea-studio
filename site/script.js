@@ -3,7 +3,8 @@ const REL = 'https://github.com/vana09179-hash/aurea-studio/releases/download/v1
 const DOWNLOADS = {
   win: { url: REL + 'AureaStudio-1.0.0-portable.exe', size: '≈ 85 МБ · портативна версія' },
   linux: { url: REL + 'AureaStudio-1.0.0-linux-x64.tar.gz', size: '≈ 118 МБ · x86-64' },
-  mac: { url: '', size: 'Версія для macOS з’явиться пізніше' }
+  mac: { url: REL + 'AureaStudio-1.0.0-mac-arm64.dmg', size: '≈ 108 МБ · Apple Silicon / ≈ 112 МБ · Intel' },
+  macIntel: { url: REL + 'AureaStudio-1.0.0-mac-x64.dmg', size: '' }
 };
 
 // OS detection → highlight the right download
@@ -17,8 +18,8 @@ document.querySelectorAll('[data-dl]').forEach(a => {
 document.querySelectorAll('[data-size]').forEach(s => { s.textContent = DOWNLOADS[s.dataset.size]?.size || ''; });
 document.querySelector(`.dl[data-os="${os}"]`)?.classList.add('mine');
 const hero = document.getElementById('heroDl');
-if (DOWNLOADS[os].url) { hero.href = DOWNLOADS[os].url; hero.setAttribute('download', ''); }
-document.getElementById('heroDlText').textContent = 'Завантажити ' + OS_NAME[os];
+if (hero && DOWNLOADS[os].url) hero.href = DOWNLOADS[os].url;
+const heroT = document.getElementById('heroDlText'); if (heroT) heroT.textContent = 'Завантажити ' + OS_NAME[os];
 
 // scroll reveal
 const io = new IntersectionObserver((es) => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { threshold: .12 });
@@ -27,6 +28,7 @@ document.querySelectorAll('.reveal').forEach((el, i) => { el.style.transitionDel
 // hero demo: letters + typewriter loop
 const title = document.getElementById('demoTitle'), type = document.getElementById('demoType');
 function playDemo() {
+  if (!title || !type) return;
   title.innerHTML = [...'КОСМОС'].map((c, i) => `<span style="animation-delay:${i * 70}ms">${c}</span>`).join('');
   const text = 'Подорож від Землі до зірок'; let i = 0; type.textContent = '';
   const step = () => { type.textContent = text.slice(0, ++i); if (i < text.length) setTimeout(step, 55 + Math.random() * 40); };
