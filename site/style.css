@@ -210,3 +210,4 @@ footer a{margin-left:14px}footer a:hover{color:var(--ink)}
   .formats{gap:16px}.formats span{width:100%}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.reveal{opacity:1;transform:none;filter:none}}
+.nav>.pillbtn{margin-left:auto}
