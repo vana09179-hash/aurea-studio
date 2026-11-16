@@ -164,7 +164,7 @@ main{max-width:1240px;margin:0 auto;padding:0 20px;background:var(--paper);borde
 .dl{position:relative;padding:28px;border-radius:24px;background:#fff;box-shadow:inset 0 0 0 1px var(--line);display:flex;flex-direction:column;align-items:flex-start;transition:transform .35s var(--ease),box-shadow .35s}
 .dl:hover{transform:translateY(-4px);box-shadow:0 24px 50px rgba(38,33,61,.12)}
 .dl.mine{background:linear-gradient(180deg,#e4e1f3,#d3cdf0);box-shadow:none}
-.dl.mine::before{content:'Ваша система';position:absolute;right:20px;top:22px;padding:3px 10px;border-radius:20px;background:var(--navy);color:#fff;font-size:11.5px;font-weight:600}
+.dl.mine::after{content:'Ваша система';position:absolute;right:20px;top:22px;padding:3px 10px;border-radius:20px;background:var(--navy);color:#fff;font-size:11.5px;font-weight:600}
 .dl h3{font-size:28px;font-weight:500}
 .dl p{color:var(--mu);font-size:14px;margin:8px 0 22px}
 .dl-btns{display:flex;gap:8px;flex-wrap:wrap}
@@ -240,3 +240,52 @@ footer a{margin-left:14px}footer a:hover{color:var(--ink)}
 .hands-credit{position:relative;z-index:2;font-size:11px;color:rgba(255,255,255,.32);margin-bottom:-18px}
 @media (max-width:1000px){.hands{width:calc(100% + 36px);margin:28px -18px -4px}}
 
+
+/* ===== SaaS motion layer ===== */
+html{scroll-padding-top:84px}
+.progress{position:fixed;left:0;top:0;right:0;height:3px;z-index:60;transform-origin:0 50%;transform:scaleX(0);background:linear-gradient(90deg,#7b6cd9,#c9a2ff,#22d3ee);pointer-events:none}
+.nav{transition:box-shadow .3s,background .3s}
+.nav.scrolled{box-shadow:0 10px 30px rgba(38,33,61,.08);background:rgba(246,245,248,.92)}
+.nav nav a{position:relative}
+.nav nav a::after{content:'';position:absolute;left:0;right:0;bottom:-6px;height:2px;border-radius:2px;background:var(--ac);transform:scaleX(0);transition:transform .35s var(--ease)}
+.nav nav a.on{color:var(--ink)}
+.nav nav a.on::after,.nav nav a:hover::after{transform:scaleX(1)}
+/* headline words */
+.words .w{display:inline-block;opacity:0;transform:translateY(.45em);filter:blur(10px);transition:opacity .8s var(--ease),transform .8s var(--ease),filter .8s var(--ease);transition-delay:calc(var(--i) * 70ms + 80ms)}
+.reveal.words,.words.reveal{filter:none;transform:none;opacity:1}
+.in .words .w,.words.in .w{opacity:1;transform:none;filter:none}
+/* button sheen */
+.pillbtn{position:relative;overflow:hidden;isolation:isolate}
+.pillbtn::after{content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,.35) 50%,transparent 70%);transform:translateX(-120%);transition:transform .7s var(--ease)}
+.pillbtn:hover::after{transform:translateX(120%)}
+.pillbtn.white::after,.pillbtn.light::after{background:linear-gradient(105deg,transparent 30%,rgba(123,108,217,.18) 50%,transparent 70%)}
+.pillbtn:active{transform:scale(.97)}
+/* cursor spotlight */
+.spot{position:relative}
+.spot::before{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:1;opacity:0;transition:opacity .35s;background:radial-gradient(260px circle at var(--mx,50%) var(--my,50%),rgba(123,108,217,.16),transparent 70%)}
+.spot:hover::before{opacity:1}
+.c-dark.spot::before,.feat>div.spot::before{background:radial-gradient(260px circle at var(--mx,50%) var(--my,50%),rgba(255,255,255,.12),transparent 70%)}
+.feat>div{border-radius:16px;padding:10px;margin:-10px}
+/* formats row: staggered chips */
+.formats b{opacity:0;transform:translateY(10px);transition:opacity .6s var(--ease),transform .6s var(--ease),color .2s}
+.formats.in b{opacity:1;transform:none}
+.formats b:nth-of-type(2){transition-delay:.08s}.formats b:nth-of-type(3){transition-delay:.16s}.formats b:nth-of-type(4){transition-delay:.24s}.formats b:nth-of-type(5){transition-delay:.32s}
+.formats b:hover{color:var(--ac)}
+/* gallery swap */
+.shot img.swap{opacity:0;filter:blur(14px);transform:scale(1.02)}
+.shot img{transition:opacity .4s var(--ease),filter .4s var(--ease),transform .5s var(--ease)}
+/* "your system" card: animated gradient ring */
+.dl.mine{background:linear-gradient(180deg,#e4e1f3,#d3cdf0) padding-box,conic-gradient(from var(--ang,0deg),#7b6cd9,#22d3ee,#f0abfc,#7b6cd9) border-box;border:1.5px solid transparent;animation:ring 6s linear infinite}
+@property --ang{syntax:'<angle>';inherits:false;initial-value:0deg}
+@keyframes ring{to{--ang:360deg}}
+/* stats tick + icon pop */
+.stats div.in b{animation:statGlow 1.8s var(--ease) both}
+@keyframes statGlow{from{text-shadow:0 0 30px rgba(170,155,255,.8)}to{text-shadow:none}}
+.fi{transition:transform .4s cubic-bezier(.34,1.6,.5,1)}
+.feat>div:hover .fi{transform:rotate(-8deg) scale(1.15)}
+/* FAQ */
+details p{overflow:hidden}
+/* footer */
+footer{opacity:.0;transform:translateY(10px);transition:opacity .8s var(--ease),transform .8s var(--ease)}
+footer.in{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){.words .w,.formats b,footer{opacity:1!important;transform:none!important;filter:none!important}.dl.mine{animation:none}}

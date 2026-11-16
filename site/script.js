@@ -22,8 +22,21 @@ if (hero && DOWNLOADS[os].url) hero.href = DOWNLOADS[os].url;
 const heroT = document.getElementById('heroDlText'); if (heroT) heroT.textContent = 'Завантажити ' + OS_NAME[os];
 
 // scroll reveal
-const io = new IntersectionObserver((es) => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { threshold: .12 });
-document.querySelectorAll('.reveal').forEach((el, i) => { el.style.transitionDelay = (i % 6) * 60 + 'ms'; io.observe(el); });
+const REDUCE = matchMedia('(prefers-reduced-motion: reduce)').matches;
+// SaaS headline: split h1/h2 into words that rise out of a blur one by one
+document.querySelectorAll('.hero h1, main h2').forEach(h => {
+  const walk = (node) => [...node.childNodes].forEach(n => {
+    if (n.nodeType === 3) { const frag = document.createDocumentFragment(); n.textContent.split(/(\s+)/).forEach(w => { if (!w) return; if (/^\s+$/.test(w)) { frag.append(w); return; } const s = document.createElement('span'); s.className = 'w'; s.textContent = w; frag.append(s); }); n.replaceWith(frag); }
+    else if (n.nodeType === 1 && n.tagName !== 'BR') walk(n);
+  });
+  walk(h); h.classList.add('words'); [...h.querySelectorAll('.w')].forEach((w, i) => w.style.setProperty('--i', i));
+  if (!h.classList.contains('reveal') && !h.closest('.reveal')) h.classList.add('reveal');
+});
+// stagger within each group of sibling reveals
+const groups = new Map();
+document.querySelectorAll('.reveal').forEach(el => { const k = el.parentElement; groups.set(k, (groups.get(k) || 0) + 1); el.style.transitionDelay = ((groups.get(k) - 1) % 8) * 90 + 'ms'; });
+const io = new IntersectionObserver((es) => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { threshold: .12, rootMargin: '0px 0px -40px 0px' });
+document.querySelectorAll('.reveal').forEach(el => io.observe(el));
 
 // hero demo: letters + typewriter loop
 const title = document.getElementById('demoTitle'), type = document.getElementById('demoType');
@@ -49,7 +62,7 @@ const TPL = [['nightgallery-0','Нічна галерея',1],['redpitch-0','Ч�
 const TPL2 = [['redpitch-2','Червоний пітч',1],['saas-0','SaaS Мінімал'],['dusk-1','Сутінки',1],['nightgallery-2','Нічна галерея',1],['aurora-0','Аврора'],['editorial-2','Редакція',1],['academy-1','Академія',1],['paper-0','Чистий аркуш']];
 function fillTrack(id, list) {
   const t = document.getElementById(id); if (!t) return;
-  const html = list.map(([f, n, isNew]) => `<div class="tpl"><img src="img/tpl/${f}.jpg" alt="Шаблон «${n}»" loading="lazy"><span>${n}</span>${isNew ? '<span class="new">Новий</span>' : ''}</div>`).join('');
+  const html = list.map(([f, n, isNew]) => `<div class="tpl"><img src="img/tpl/${f}.jpg" alt="Шаблон «${n}»" decoding="async"><span>${n}</span>${isNew ? '<span class="new">Новий</span>' : ''}</div>`).join('');
   t.innerHTML = html + html;
 }
 fillTrack('tplTrack', TPL); fillTrack('tplTrack2', TPL2);
@@ -60,7 +73,9 @@ const img = document.getElementById('galImg');
 document.getElementById('galTabs').addEventListener('click', (e) => {
   const b = e.target.closest('button'); if (!b) return;
   document.querySelectorAll('#galTabs button').forEach(x => x.classList.toggle('on', x === b));
-  img.style.opacity = 0; setTimeout(() => { img.src = `img/${SHOTS[+b.dataset.i]}.jpg`; img.onload = () => { img.style.opacity = 1; }; }, 200);
+  const src = `img/${SHOTS[+b.dataset.i]}.jpg`; if (img.getAttribute('src') === src) return;
+  img.classList.add('swap');
+  setTimeout(() => { const pre = new Image(); pre.onload = pre.onerror = () => { img.src = src; setTimeout(() => img.classList.remove('swap'), 30); }; pre.src = src; }, 220);
 });
 
 // dotted hands from Michelangelo's «Creation of Adam» (public domain): appear from the edges, twinkle, reach toward each other
@@ -91,4 +106,63 @@ document.getElementById('galTabs').addEventListener('click', (e) => {
   size(); addEventListener('resize', () => { size(); if (!visible || reduce) draw(performance.now()); });
   new IntersectionObserver(es => { const v = es[0].isIntersecting; if (v && !visible) { visible = true; requestAnimationFrame(t => { if (start === null) start = t; draw(t); }); } else if (!v) visible = false; }).observe(cv);
   if (reduce) { start = 0; draw(0); }
+})();
+
+
+// ===== SaaS motion layer =====
+(function () {
+  // count-up numbers (stats + the "2026" chip)
+  const countUp = (el, to, suffix = '', dur = 1600) => {
+    if (REDUCE) { el.textContent = to + suffix; return; }
+    const t0 = performance.now();
+    const tick = (t) => { const k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(2, -10 * k); el.textContent = Math.round(to * e) + suffix; if (k < 1) requestAnimationFrame(tick); };
+    requestAnimationFrame(tick);
+  };
+  const statIO = new IntersectionObserver(es => es.forEach(e => {
+    if (!e.isIntersecting) return; statIO.unobserve(e.target);
+    const m = e.target.textContent.trim().match(/^(\d+)(.*)$/); if (m) countUp(e.target, +m[1], m[2]);
+  }), { threshold: .6 });
+  document.querySelectorAll('.stats b').forEach(b => statIO.observe(b));
+  const chip = document.querySelector('.achip[data-a=count] span');
+  if (chip) { chip.textContent = chip.dataset.n; }
+
+  // scroll progress bar + nav state + active section
+  const bar = document.createElement('div'); bar.className = 'progress'; document.body.prepend(bar);
+  const nav = document.querySelector('.nav');
+  const links = [...document.querySelectorAll('.nav nav a')];
+  const secs = links.map(a => document.querySelector(a.getAttribute('href'))).filter(Boolean);
+  const heroPhoto = document.querySelector('.hero-photo');
+  let ticking = false;
+  const onScroll = () => {
+    ticking = false;
+    const y = scrollY, max = document.documentElement.scrollHeight - innerHeight;
+    bar.style.transform = `scaleX(${max > 0 ? y / max : 0})`;
+    nav.classList.toggle('scrolled', y > 10);
+    let cur = null; for (const s of secs) if (s.getBoundingClientRect().top < innerHeight * .4) cur = s;
+    links.forEach(a => a.classList.toggle('on', cur && a.getAttribute('href') === '#' + cur.id));
+    if (heroPhoto && !REDUCE && y < innerHeight * 1.2) heroPhoto.style.translate = `0 ${y * .18}px`;
+  };
+  addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(onScroll); } }, { passive: true });
+  onScroll();
+
+  // cursor spotlight on cards
+  document.querySelectorAll('.c, .dl, .achip, .req, details, .tpl, .feat > div').forEach(el => {
+    el.classList.add('spot');
+    el.addEventListener('pointermove', (e) => { const r = el.getBoundingClientRect(); el.style.setProperty('--mx', (e.clientX - r.left) + 'px'); el.style.setProperty('--my', (e.clientY - r.top) + 'px'); });
+  });
+
+  // smooth FAQ open/close
+  document.querySelectorAll('details').forEach(d => {
+    const sum = d.querySelector('summary'), body = d.querySelector('p');
+    sum.addEventListener('click', (e) => {
+      if (REDUCE) return; e.preventDefault();
+      if (d.open) {
+        const h = body.offsetHeight; body.animate([{ height: h + 'px', opacity: 1 }, { height: '0px', opacity: 0 }], { duration: 260, easing: 'cubic-bezier(.2,.8,.2,1)', fill: 'forwards' });
+        clearTimeout(d._t); d._t = setTimeout(() => { d.open = false; body.getAnimations().forEach(a => a.cancel()); }, 270);
+      } else {
+        clearTimeout(d._t); body.getAnimations().forEach(a => a.cancel()); d.open = true; const h = body.offsetHeight;
+        body.animate([{ height: '0px', opacity: 0, transform: 'translateY(-6px)' }, { height: h + 'px', opacity: 1, transform: 'none' }], { duration: 340, easing: 'cubic-bezier(.2,.8,.2,1)' });
+      }
+    });
+  });
 })();
