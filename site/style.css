@@ -211,6 +211,11 @@ footer a{margin-left:14px}footer a:hover{color:var(--ink)}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.reveal{opacity:1;transform:none;filter:none}}
 .nav>.pillbtn{margin-left:auto}
+/* dotted hands (from Michelangelo, public domain) */
+.hands{position:relative;z-index:1;width:calc(100% + 80px);margin:40px -40px 10px;aspect-ratio:137/24}
+.hands canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.hands-credit{position:relative;z-index:2;font-size:11px;color:rgba(255,255,255,.32);margin-bottom:-18px}
+@media (max-width:1000px){.hands{width:calc(100% + 36px);margin:28px -18px -4px}}
 
 /* ===== spark: dark SaaS showcase ===== */
 .spark-sec{position:relative;overflow:hidden;margin:22px -20px 0;padding:90px 40px 0;border-radius:var(--r);background:radial-gradient(80% 60% at 50% 100%,rgba(124,92,255,.35),transparent 70%),#030305;color:#f4f3f8;display:flex;flex-direction:column;align-items:center}
@@ -229,4 +234,9 @@ footer a{margin-left:14px}footer a:hover{color:var(--ink)}
 @keyframes band{0%,30%{background-position:150% 0}70%,100%{background-position:-60% 0}}
 @media (max-width:1000px){.spark-sec{padding:60px 18px 0}.saas-shot{margin-top:36px}}
 .nav>.pillbtn{margin-left:auto}
+/* dotted hands (from Michelangelo, public domain) */
+.hands{position:relative;z-index:1;width:calc(100% + 80px);margin:40px -40px 10px;aspect-ratio:137/24}
+.hands canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.hands-credit{position:relative;z-index:2;font-size:11px;color:rgba(255,255,255,.32);margin-bottom:-18px}
+@media (max-width:1000px){.hands{width:calc(100% + 36px);margin:28px -18px -4px}}
 
