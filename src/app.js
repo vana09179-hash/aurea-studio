@@ -239,16 +239,21 @@ function animateThumb(tw, slide, proj) {
   setTimeout(() => { delete tw.dataset.busy; }, 1500);
 }
 
+const TPL_COUNT = { museum: 6, saas: 5, journal: 4, aurora: 3, cosmos: 5, nightgallery: 5, redpitch: 5, dusk: 4, editorial: 4, academy: 4, paper: 3, blank: 1 };
 async function renderStart() {
   const st = $('#start');
   const rec = api.recovery ? await api.recovery() : null;
   const recent = api.recent ? await api.recent() : [];
   const grid = h('div', { class: 'tgrid' });
   TPL.list.forEach((t, i) => {
-    const proj = t.make();
-    const tw = h('div', { class: 'tw' }, Aurea.thumb(proj.slides[0], proj, THUMB_W));
-    const card = h('div', { class: 'tcard2 glass', style: `animation-delay:${.08 * i}s`, onclick: () => createFromTemplate(t), onmouseenter: () => animateThumb(tw, proj.slides[0], proj) },
-      tw, h('div', { class: 'meta' }, h('div', {}, h('b', {}, t.name), h('small', {}, `${t.desc} · ${proj.slides.length} сл.`)), h('span', { class: 'go' }, icon('right'))));
+    // static cover image instead of a live DOM slide; the live animated slide is mounted only while hovered
+    const cover = () => h('img', { class: 'tcover', src: `assets/tpl/${t.id}.jpg`, alt: '', loading: 'lazy', decoding: 'async', draggable: 'false' });
+    const tw = h('div', { class: 'tw' }, cover());
+    let proj = null, leaveT = 0;
+    const card = h('div', { class: 'tcard2 glass', style: `animation-delay:${.08 * i}s`, onclick: () => createFromTemplate(t),
+      onmouseenter: () => { clearTimeout(leaveT); proj ||= t.make(); animateThumb(tw, proj.slides[0], proj); },
+      onmouseleave: () => { leaveT = setTimeout(() => { delete tw.dataset.busy; tw.replaceChildren(cover()); }, 250); } },
+      tw, h('div', { class: 'meta' }, h('div', {}, h('b', {}, t.name), h('small', {}, `${t.desc} · ${TPL_COUNT[t.id] || ''} сл.`)), h('span', { class: 'go' }, icon('right'))));
     grid.append(card);
   });
   let recBlock = null;
@@ -1609,7 +1614,7 @@ addEventListener('beforeunload', () => { if (P && api.autosave) api.autosave(ser
 
 // ================= DEMO (automated screenshots) =================
 window.__demo = {
-  steps: () => ['02-editor-museum', '03-animation-tab', '04-icon-menu', '05-show-title', '06-show-morph-mid', '07-show-slide2', '08-presenter', '09-cosmos-editor', '10-show-cosmos-chart', '11-slide-tab', '12-export', '19-image-library', '20-image-search', '21-overview', '22-quickbar-chart', '23-dark-editor', '24-dark-anim', '25-dark-start', '26-light-start', '27-layers', '28-format', '29-palette', '30-pptx-dialog', '31-find', '32-notes', '33-pptx-roundtrip', '34-keys', '35-start-gallery', '36-redpitch', '37-dusk-show', '38-editorial', '39-nightgallery-show'],
+  steps: () => ['02-editor-museum', '03-animation-tab', '04-icon-menu', '05-show-title', '06-show-morph-mid', '07-show-slide2', '08-presenter', '09-cosmos-editor', '10-show-cosmos-chart', '11-slide-tab', '12-export', '19-image-library', '20-image-search', '21-overview', '22-quickbar-chart', '23-dark-editor', '24-dark-anim', '25-dark-start', '26-light-start', '27-layers', '28-format', '29-palette', '30-pptx-dialog', '31-find', '32-notes', '33-pptx-roundtrip', '34-keys', '35-start-gallery', '36-redpitch', '37-dusk-show', '38-editorial', '39-nightgallery-show', '40-ai-dialog'],
   async run(step) {
     const T = (id) => TPL.list.find(t => t.id === id);
     const pick = (fn) => { const e = slideCur().elements.find(fn); sel = e ? [e.id] : []; renderOverlay(); renderProps(); };
@@ -1650,6 +1655,7 @@ window.__demo = {
       case '36-redpitch': await createFromTemplate(T('redpitch')); gotoSlide(1); sel = []; renderOverlay(); tab = 'anim'; renderProps(); return 1800;
       case '37-dusk-show': await createFromTemplate(T('dusk')); startShow(0, false, true); return 3200;
       case '38-editorial': endShow(); await createFromTemplate(T('editorial')); gotoSlide(0); sel = []; renderOverlay(); tab = 'design'; renderProps(); return 1800;
+      case '40-ai-dialog': { endShow(); await createFromTemplate(T('saas')); await aiDialog(); await new Promise(r => setTimeout(r, 200)); const ta = $('.aiprompt'); ta.value = 'бузкове поле лаванди на світанку, м’яке світло'; [...document.querySelectorAll('.aimodal .aichip')].find(c => c.textContent === 'Фото')?.click(); [...document.querySelectorAll('.aimodal .btn-primary')].pop().click(); for (let k = 0; k < 150 && document.querySelectorAll('.aicell.loading').length; k++) await new Promise(r => setTimeout(r, 1000)); return 1500; }
       case '39-nightgallery-show': await createFromTemplate(T('nightgallery')); startShow(2, false, true); return 3200;
       case 'home': if (showPlayer) endShow(); await goHome(); return 800;
       case '12-export': {
@@ -2046,6 +2052,7 @@ const FXS = [['none', 'Немає'], ['particles', 'Частинки'], ['stars'
 Object.assign(ACTIONS, {
   'menu-image': (b) => menuAt(b, [
     { label: 'З комп’ютера…', icon: 'folder', kbd: 'I', fn: () => pickImage() },
+    { label: 'Згенерувати зображення ШІ…', icon: 'sparkle2', kbd: 'Ctrl+Shift+I', fn: () => aiDialog() },
     { label: 'Пошук фото з вільною ліцензією…', icon: 'globe', kbd: 'Shift+I', fn: () => imageSearch() },
     { label: 'Бібліотека шедеврів', icon: 'library', fn: () => { imSource = 'lib'; imageSearch(); } }]),
   'menu-icon': (b) => iconMenu(b),
@@ -2444,7 +2451,14 @@ function shadowOpt(e) {
   if (!fx.shadow || fx.shadow === 'none') return undefined;
   return { type: 'outer', color: hexNo(fx.sColor || '#000000'), blur: (fx.shadow === 'hard' ? 0 : (fx.sBlur ?? 30)) * .5, offset: (fx.sDist ?? 14) * .5, angle: fx.sAngle ?? 90, opacity: fx.sOpacity ?? .45 };
 }
+// .pptx libraries (~0.55 MB) are loaded only when they are first needed — keeps startup RAM low
+let vendorP = null;
+function needVendor() {
+  if (window.PptxGenJS && window.JSZip) return Promise.resolve();
+  return vendorP ||= ['vendor/jszip.min.js', 'vendor/pptxgen.bundle.js'].reduce((p, src) => p.then(() => new Promise((ok, no) => { const sc = document.createElement('script'); sc.src = src; sc.onload = ok; sc.onerror = () => { vendorP = null; no(new Error('Не вдалося завантажити ' + src)); }; document.head.append(sc); })), Promise.resolve());
+}
 async function buildPptx(opts) {
+  await needVendor();
   const pptx = new PptxGenJS();
   pptx.layout = 'LAYOUT_WIDE';
   pptx.title = P.title || 'Презентація';
@@ -2544,6 +2558,57 @@ async function patchPptxXml(buf, anims, opts) {
   return zip.generateAsync({ type: 'arraybuffer', compression: 'DEFLATE' });
 }
 const ab2b64 = (buf) => { let s = ''; const b = new Uint8Array(buf); for (let i = 0; i < b.length; i += 0x8000) s += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000)); return btoa(s); };
+
+// ---- AI image generation dialog (free Pollinations by default, optional Gemini with own key) ----
+const AI_STYLES = [['', 'Без стилю'], ['photorealistic, cinematic light, high detail', 'Фото'], ['3D render, soft studio light, glossy', '3D'], ['watercolor painting, soft paper texture', 'Акварель'], ['minimal flat illustration, clean shapes, pastel', 'Мінімалізм'], ['neon glow, dark background, futuristic', 'Неон'], ['oil painting, classical museum style', 'Олія']];
+async function aiDialog(pt) {
+  finishEdit();
+  const cfg = await api.aiSettings?.() || { provider: 'free', hasKey: false };
+  let style = '', ratio = '16:9', provider = cfg.provider === 'gemini' && cfg.hasKey ? 'gemini' : 'free';
+  const close = () => m.remove();
+  const ta = h('textarea', { class: 'inp aiprompt', rows: 3, placeholder: 'Наприклад: бузкове поле на світанку, м’яке світло, вид зверху' });
+  const grid = h('div', { class: 'aigrid' });
+  const status = h('div', { class: 'hint aistatus' });
+  const chips = (list, get, set) => h('div', { class: 'aichips' }, ...list.map(([v, l]) => { const b = h('button', { class: 'aichip' + (get() === v ? ' on' : ''), onclick: () => { set(v); b.parentElement.querySelectorAll('.aichip').forEach(x => x.classList.toggle('on', x === b)); } }, l); return b; }));
+  const keyRow = h('div', { class: 'airow', style: provider === 'gemini' ? '' : 'display:none' },
+    h('input', { class: 'inp', type: 'password', placeholder: cfg.hasKey ? 'Ключ збережено на цьому комп’ютері' : 'Вставте ключ Gemini API (aistudio.google.com)', onchange: async (e) => { const v = e.target.value.trim(); if (v) { await api.aiSettings({ geminiKey: v }); e.target.value = ''; e.target.placeholder = 'Ключ збережено на цьому комп’ютері'; toast('Ключ Gemini збережено'); } } }));
+  const provChips = chips([['free', 'Безкоштовно, без ключа'], ['gemini', 'Gemini (ваш ключ)']], () => provider, v => { provider = v; keyRow.style.display = v === 'gemini' ? '' : 'none'; api.aiSettings({ provider: v }); });
+  const go = h('button', { class: 'btn-primary', onclick: () => run() }, icon('sparkle2'), 'Згенерувати');
+  async function run() {
+    const prompt = ta.value.trim(); if (!prompt) { ta.focus(); return; }
+    const full = style ? `${prompt}, ${style}` : prompt;
+    const n = 1; // one image per click (free service allows one at a time); each click adds a new variant
+    go.disabled = true; status.textContent = provider === 'gemini' ? 'Gemini малює… (5–20 с)' : 'Малюю… (5–30 с)';
+    while (grid.children.length >= 4) grid.firstChild.remove();
+    const base = grid.children.length;
+    grid.append(...Array.from({ length: n }, () => h('div', { class: 'aicell loading' }, h('span', { class: 'shimmer' }))));
+    // the free service allows one request at a time: draw variants one after another, retrying when it is busy
+    const gen = async (i) => { for (let k = 0; ; k++) { try { return await api.aiImage({ prompt: full, ratio, provider, seed: Math.floor(Math.random() * 1e9) + i }); } catch (err) { if (k < 3 && /HTTP (402|429|5\d\d)/.test(String(err.message))) { status.textContent = 'Сервіс зайнятий, повторюю…'; await new Promise(r => setTimeout(r, 8000 * (k + 1))); continue; } throw err; } } };
+    let chain = Promise.resolve();
+    const jobs = Array.from({ length: n }, (_, i) => (chain = chain.then(() => gen(i))).then(r => {
+      const cell = grid.children[base + i];
+      const img = h('img', { src: r.data, alt: '' });
+      cell.classList.remove('loading'); cell.replaceChildren(img, h('button', { class: 'btn-primary sm', onclick: async () => { close(); await addImageUrl(await shrinkImage(r.data), pt); const el = selected()[0]; if (el) { el.name = 'ШІ: ' + prompt.slice(0, 40); changed('canvas'); } toast('Зображення ШІ додано на слайд'); } }, 'Вставити'));
+      cell.onclick = (e) => { if (e.target === img) cell.querySelector('button').click(); };
+    }).catch(err => { const cell = grid.children[base + i]; cell.classList.remove('loading'); cell.replaceChildren(h('div', { class: 'aierr' }, String(err.message || err).replace(/^Error invoking remote method '[^']+': (Error: )?/, ''))); }));
+    await Promise.allSettled(jobs);
+    go.disabled = false; status.textContent = (provider === 'free' ? 'Натисніть ще раз — з’явиться ще один варіант. Безкоштовний генератор додає маленький знак у кутку; Gemini з вашим ключем — без знака.' : 'Натисніть ще раз — з’явиться ще один варіант.');
+  }
+  ta.addEventListener('keydown', (e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) run(); });
+  const m = h('div', { class: 'modal-bg', onclick: (e) => { if (e.target === m) close(); } },
+    h('div', { class: 'modal glass aimodal', style: 'width:min(760px,94vw)' },
+      h('h2', {}, 'Згенерувати зображення ШІ'),
+      h('p', { class: 'hint', style: 'margin:-6px 0 12px' }, 'Опишіть картинку будь-якою мовою. Ctrl+Enter — згенерувати.'),
+      ta,
+      h('div', { class: 'airow' }, h('span', { class: 'lbl' }, 'Стиль'), chips(AI_STYLES, () => style, v => { style = v; })),
+      h('div', { class: 'airow' }, h('span', { class: 'lbl' }, 'Формат'), chips([['16:9', '16:9 слайд'], ['1:1', '1:1'], ['4:3', '4:3'], ['9:16', '9:16']], () => ratio, v => { ratio = v; })),
+      h('div', { class: 'airow' }, h('span', { class: 'lbl' }, 'Сервіс'), provChips),
+      keyRow, grid, status,
+      h('div', { class: 'row', style: 'margin-top:14px' }, h('div', { class: 'spacer' }), h('button', { class: 'btn', onclick: close }, 'Закрити'), go)));
+  document.body.append(m);
+  setTimeout(() => ta.focus(), 50);
+}
+
 function exportPptxDialog() {
   finishEdit();
   const o = { transitions: true, anims: true };
@@ -2583,6 +2648,7 @@ const EMU = 914400;
 async function importPptx(arrayBuf, fileName) {
   busy('Імпортую .pptx…');
   try {
+    await needVendor();
     const zip = await JSZip.loadAsync(arrayBuf);
     const parse = (s) => new DOMParser().parseFromString(s, 'application/xml');
     const pres = parse(await zip.file('ppt/presentation.xml').async('string'));
@@ -2684,7 +2750,7 @@ const COMMANDS = () => [
   ['Експорт у формат .pptx…', 'Ctrl+Shift+E', exportPptxDialog], ['Експорт у PDF', 'Ctrl+P', exportPdf], ['Експорт у HTML', '', exportHtml],
   ['Показ з початку', 'F5', () => startShow(0)], ['Показ з поточного слайда', 'Shift+F5', () => startShow(cur)], ['Панель доповідача', 'Alt+F5', () => startPresenterMode()], ['Режим читання', '', readingView],
   ['Текст', 'T', () => addText('body')], ['Заголовок', '', () => addText('title')], ['Прямокутник', 'R', () => addShape('rect')], ['Еліпс', 'O', () => addShape('ellipse')], ['Лінія', 'L', addLine], ['Зображення з комп’ютера', 'I', () => pickImage()],
-  ['Пошук фото з вільною ліцензією', 'Shift+I', () => imageSearch()], ['Іконка', '', () => iconMenu($('[data-act="menu-icon"]'))], ['Діаграма-стовпці', '', () => addChart('bar')], ['Кільцева діаграма', '', () => addChart('donut')],
+  ['Згенерувати зображення ШІ', 'Ctrl+Shift+I', () => aiDialog()], ['Пошук фото з вільною ліцензією', 'Shift+I', () => imageSearch()], ['Іконка', '', () => iconMenu($('[data-act="menu-icon"]'))], ['Діаграма-стовпці', '', () => addChart('bar')], ['Кільцева діаграма', '', () => addChart('donut')],
   ['Копіювати', 'Ctrl+C', copySel], ['Вирізати', 'Ctrl+X', cutSel], ['Вставити', 'Ctrl+V', paste], ['Вставити як простий текст', 'Ctrl+Alt+V', pastePlain], ['Дублювати', 'Ctrl+D', duplicateSel], ['Видалити', 'Delete', deleteSel],
   ['Скасувати', 'Ctrl+Z', undo], ['Повторити', 'Ctrl+Y', redo], ['Виділити все', 'Ctrl+A', () => { sel = slideCur().elements.filter(x => !x.locked && !x.hidden).map(x => x.id); renderOverlay(); renderProps(); }],
   ['Групувати', 'Ctrl+G', groupSel], ['Розгрупувати', 'Ctrl+Shift+G', ungroupSel], ['На передній план', 'Ctrl+Shift+]', () => layer('top')], ['На задній план', 'Ctrl+Shift+[', () => layer('bottom')],
@@ -2770,6 +2836,7 @@ addEventListener('keydown', (e) => {
   else if (ctrl && e.altKey && code === 'KeyV') fn = pastePlain;
   else if (ctrl && !e.shiftKey && code === 'KeyB') fn = () => toggleTextStyle('weight');
   else if (ctrl && !e.shiftKey && code === 'KeyI') fn = () => toggleTextStyle('italic');
+  else if (ctrl && e.shiftKey && code === 'KeyI') fn = () => aiDialog();
   else if (ctrl && !e.shiftKey && code === 'KeyU') fn = () => toggleTextStyle('underline');
   else if (ctrl && e.shiftKey && code === 'BracketRight') fn = () => layer('top');
   else if (ctrl && e.shiftKey && code === 'BracketLeft') fn = () => layer('bottom');

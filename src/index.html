@@ -15,7 +15,7 @@
 
 <header id="topbar">
   <button class="logo" id="logoBtn" title="Меню">
-    <span class="mark"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e7cf93" stroke-width="2.2" stroke-linecap="round"><path d="M6 21V11a6 6 0 0 1 12 0v10"/><path d="M4 21h16"/><path d="m12 9 2 3-2 3-2-3z" fill="#7d1f2b" stroke-width="1.4"/></svg></span>
+    <span class="mark"><svg width="16" height="16" viewBox="0 0 24 24"><defs><linearGradient id="lgStar" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff"/><stop offset=".6" stop-color="#b9a8ff"/><stop offset="1" stop-color="#7fd6f5"/></linearGradient></defs><path d="M12 2.5c.5 5 2.2 7 7 9.5-4.8 2.5-6.5 4.5-7 9.5-.5-5-2.2-7-7-9.5 4.8-2.5 6.5-4.5 7-9.5z" fill="url(#lgStar)"/></svg></span>
     <b>Aurea Studio</b>
   </button>
   <input class="doc-title hidden" id="docTitle" spellcheck="false" title="Назва презентації">
@@ -122,8 +122,6 @@
 <div id="toast"></div>
 <input type="file" id="fileImg" accept="image/*" multiple class="hidden">
 
-<script src="vendor/jszip.min.js"></script>
-<script src="vendor/pptxgen.bundle.js"></script>
 <script src="player.js"></script>
 <script src="templates.js"></script>
 <script src="app.js"></script>

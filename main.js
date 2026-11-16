@@ -11,6 +11,12 @@ protocol.registerSchemesAsPrivileged([
 
 const SRC = path.join(__dirname, 'src');
 const IS_WIN = process.platform === 'win32', IS_MAC = process.platform === 'darwin';
+
+// Low-memory note: Chromium switches (gpu budget, --optimize-for-size, disabling spare renderer) were measured
+// and gave no stable gain, so only the shader disk cache is turned off.
+app.commandLine.appendSwitch('disable-gpu-shader-disk-cache');
+const EXP = (process.env.AUREA_EXP || '').split(',');
+const USE_ACRYLIC = IS_WIN && !EXP.includes('noacrylic');
 const overlayFor = (t) => ({ color: IS_WIN ? '#00000000' : (t === 'light' ? '#f6f3ee' : '#101016'), symbolColor: t === 'light' ? '#3b3650' : '#d9d4ca', height: 56 });
 let win = null;
 let audience = null;
@@ -43,7 +49,7 @@ function createWindow() {
     title: 'Aurea Studio',
     icon: path.join(__dirname, 'build', 'icon.png'),
     backgroundColor: IS_WIN ? '#00000000' : '#f6f3ee',
-    ...(IS_WIN ? { backgroundMaterial: 'acrylic' } : {}),
+    ...(USE_ACRYLIC ? { backgroundMaterial: 'acrylic' } : {}),
     titleBarStyle: 'hidden',
     ...(IS_MAC ? { trafficLightPosition: { x: 16, y: 20 } } : { titleBarOverlay: overlayFor('light') }),
     show: false,
@@ -262,6 +268,53 @@ ipcMain.handle('net:image', async (_e, url) => {
   const buf = Buffer.from(await r.arrayBuffer());
   if (buf.length > 30 * 1024 * 1024) throw new Error('завеликий файл');
   return `data:${type};base64,${buf.toString('base64')}`;
+});
+
+// ---- AI image generation ----
+// Free by default: Pollinations (no key; adds a small watermark). Optional: Gemini with the user's own API key
+// (stored only on this computer in userData/ai.json and sent only to generativelanguage.googleapis.com).
+const aiFile = () => path.join(userDir(), 'ai.json');
+const readAi = () => { try { return JSON.parse(fs.readFileSync(aiFile(), 'utf8')); } catch { return {}; } };
+ipcMain.handle('ai:settings', async (_e, patch) => {
+  const cur = readAi();
+  if (patch) { Object.assign(cur, patch); fs.writeFileSync(aiFile(), JSON.stringify(cur)); }
+  return { provider: cur.provider || 'free', hasKey: !!cur.geminiKey, model: cur.model || 'gemini-2.5-flash-image' };
+});
+async function toEnglishPrompt(text) {
+  if (!/[Ѐ-ӿ]/.test(text)) return text;
+  try {
+    const r = await net.fetch('https://text.pollinations.ai/' + encodeURIComponent('Translate this image description to natural English. Reply with the translation only, no quotes: ' + text), { headers: UA });
+    if (r.ok) { const t = (await r.text()).trim(); if (t && t.length < 1200) return t; }
+  } catch {}
+  return text;
+}
+ipcMain.handle('ai:image', async (_e, o) => {
+  const prompt = String(o.prompt || '').slice(0, 1500).trim();
+  if (!prompt) throw new Error('Опишіть, що згенерувати');
+  const cfg = readAi();
+  const provider = o.provider || cfg.provider || 'free';
+  if (provider === 'gemini') {
+    if (!cfg.geminiKey) throw new Error('Додайте свій ключ Gemini API у налаштуваннях генерації');
+    const model = cfg.model || 'gemini-2.5-flash-image';
+    const body = { contents: [{ parts: [{ text: `${prompt}. Aspect ratio ${o.ratio || '16:9'}. No text, no watermark.` }] }] };
+    const r = await net.fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, { method: 'POST', headers: { 'content-type': 'application/json', 'x-goog-api-key': cfg.geminiKey }, body: JSON.stringify(body) });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error('Gemini: ' + (j.error && j.error.message ? j.error.message : 'HTTP ' + r.status));
+    const part = (j.candidates?.[0]?.content?.parts || []).find(p => p.inlineData || p.inline_data);
+    const d = part && (part.inlineData || part.inline_data);
+    if (!d) throw new Error('Gemini не повернув зображення — спробуйте інший опис');
+    return { data: `data:${d.mimeType || d.mime_type || 'image/png'};base64,${d.data}`, provider: 'gemini' };
+  }
+  const en = await toEnglishPrompt(prompt);
+  const [w, h] = ({ '16:9': [1280, 720], '1:1': [1024, 1024], '9:16': [720, 1280], '4:3': [1152, 864] })[o.ratio] || [1280, 720];
+  const seed = Number.isFinite(o.seed) ? o.seed : Math.floor(Math.random() * 1e9);
+  const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(en)}?width=${w}&height=${h}&seed=${seed}&nologo=true&model=flux`;
+  const r = await net.fetch(url, { headers: UA });
+  if (!r.ok) throw new Error('Сервіс генерації зайнятий (HTTP ' + r.status + '). Спробуйте ще раз за хвилину.');
+  const type = (r.headers.get('content-type') || '').split(';')[0];
+  if (!type.startsWith('image/')) throw new Error('Сервіс повернув не зображення');
+  const buf = Buffer.from(await r.arrayBuffer());
+  return { data: `data:${type};base64,${buf.toString('base64')}`, provider: 'free', prompt: en };
 });
 
 ipcMain.handle('win:theme', async (_e, t) => {

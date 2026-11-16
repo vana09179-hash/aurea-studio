@@ -359,14 +359,14 @@
           ? `linear-gradient(${s.gradAngle ?? 135}deg, ${hexA(s.fill, s.fillOpacity ?? .1)}, ${hexA(s.color2, s.fillOpacity ?? .1)})`
           : hexA(s.fill || '#ffffff', s.fillOpacity ?? .07);
         g.style.border = `${s.strokeWidth ?? 1}px solid ${hexA(s.stroke || '#ffffff', s.strokeOpacity ?? .16)}`;
-        g.style.backdropFilter = `blur(${s.blur ?? 26}px) saturate(150%)`;
+        if (!opts || opts.mode !== 'static') g.style.backdropFilter = `blur(${s.blur ?? 26}px) saturate(150%)`; // thumbnails: no live backdrop blur (RAM)
         g.style.boxShadow = '0 30px 80px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.14)';
         inn.appendChild(g);
       } else if (el.shape === 'glow') {
         const g = div('a-glass');
         g.style.borderRadius = '50%';
         g.style.background = `radial-gradient(closest-side, ${hexA(s.fill, s.fillOpacity ?? .85)}, ${hexA(s.color2 || s.fill, 0)})`;
-        g.style.filter = `blur(${s.blur ?? 30}px)`;
+        if (!opts || opts.mode !== 'static') g.style.filter = `blur(${s.blur ?? 30}px)`; // thumbnails: gradient only, no GPU blur layer
         inn.appendChild(g);
       } else inn.appendChild(shapeSvg(el));
     } else if (el.type === 'line') {
@@ -394,7 +394,7 @@
       root.appendChild(im);
     }
     if (opts.mode === 'static') root.classList.add('a-static');
-    const fxl = fxLayer(bg, slide.id);
+    const fxl = opts.mode === 'static' ? null : fxLayer(bg, slide.id); // thumbnails skip living backgrounds (RAM)
     if (fxl) root.appendChild(fxl);
     slide.elements.forEach((el, i) => {
       if (el.hidden && opts.mode !== 'edit') return;
@@ -404,7 +404,7 @@
       root.appendChild(n);
     });
     if (bg.vignette) root.appendChild(div('a-vignette'));
-    if (bg.grain) root.appendChild(div('a-grain'));
+    if (bg.grain && opts.mode !== 'static') root.appendChild(div('a-grain'));
     return root;
   }
 

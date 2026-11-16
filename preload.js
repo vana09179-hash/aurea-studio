@@ -31,6 +31,8 @@ contextBridge.exposeInMainWorld('aurea', {
   pathForFile: (f) => { try { return webUtils.getPathForFile(f); } catch { return ''; } },
   netJson: (u) => ipcRenderer.invoke('net:json', u),
   netImage: (u) => ipcRenderer.invoke('net:image', u),
+  aiImage: (o) => ipcRenderer.invoke('ai:image', o),
+  aiSettings: (patch) => ipcRenderer.invoke('ai:settings', patch),
   setTheme: (t) => ipcRenderer.invoke('win:theme', t),
   openPinterest: (q) => ipcRenderer.invoke('pin:open', q),
   savePptx: (o) => ipcRenderer.invoke('pptx:save', o),
