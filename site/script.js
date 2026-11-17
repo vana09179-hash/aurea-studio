@@ -1,10 +1,10 @@
 // ---- Download links (GitHub Releases) ----
-const REL = 'https://github.com/vana09179-hash/aurea-studio/releases/download/v1.1.0/';
+const REL = 'https://github.com/vana09179-hash/aurea-studio/releases/download/v1.2.0/';
 const DOWNLOADS = {
-  win: { url: REL + 'AureaStudio-1.1.0-portable.exe', size: '≈ 85 МБ · портативна версія' },
-  linux: { url: REL + 'AureaStudio-1.1.0-linux-x64.tar.gz', size: '≈ 118 МБ · x86-64' },
-  mac: { url: REL + 'AureaStudio-1.1.0-mac-arm64.dmg', size: '≈ 108 МБ · Apple Silicon / ≈ 112 МБ · Intel' },
-  macIntel: { url: REL + 'AureaStudio-1.1.0-mac-x64.dmg', size: '' }
+  win: { url: REL + 'AureaStudio-1.2.0-portable.exe', size: '≈ 85 МБ · портативна версія' },
+  linux: { url: REL + 'AureaStudio-1.2.0-linux-x64.tar.gz', size: '≈ 118 МБ · x86-64' },
+  mac: { url: REL + 'AureaStudio-1.2.0-mac-arm64.dmg', size: '≈ 108 МБ · Apple Silicon / ≈ 112 МБ · Intel' },
+  macIntel: { url: REL + 'AureaStudio-1.2.0-mac-x64.dmg', size: '' }
 };
 
 // OS detection → highlight the right download
