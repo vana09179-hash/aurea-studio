@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Code signing policy, конфіденційність і видалення — Aurea Studio</title>
+<meta name="description" content="Політика підпису коду, конфіденційність і як видалити Aurea Studio.">
+<link rel="canonical" href="https://vana09179-hash.github.io/aurea-studio/policy.html">
+<link rel="icon" href="img/icon.svg" type="image/svg+xml">
+<style>
+  :root{--page:#eceaf2;--paper:#f6f5f8;--ink:#17142a;--ink2:#3b3754;--mu:#5f5b74;--line:rgba(23,20,42,.1);--ac:#5b4fc4}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--page);color:var(--ink);font:16px/1.65 Inter,'Segoe UI',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  main{max-width:760px;margin:0 auto;padding:48px 16px 80px}
+  a{color:var(--ac);text-underline-offset:3px}
+  a:focus-visible{outline:2px solid var(--ac);outline-offset:2px;border-radius:4px}
+  .back{display:inline-block;margin-bottom:28px;font-size:14px;color:var(--mu);text-decoration:none}
+  .back:hover{color:var(--ink)}
+  h1{font-size:clamp(30px,6vw,42px);line-height:1.1;letter-spacing:-.025em;margin:0 0 12px}
+  h2{font-size:24px;letter-spacing:-.015em;margin:48px 0 12px;padding-top:28px;border-top:1px solid var(--line)}
+  h3{font-size:17px;margin:24px 0 6px}
+  p,li{color:var(--ink2)}
+  .lead{color:var(--mu);margin:0 0 8px}
+  table{width:100%;border-collapse:collapse;margin:12px 0;font-size:15px}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--ink);font-weight:600;background:var(--paper)}
+  code{font:14px/1.4 ui-monospace,Consolas,monospace;background:var(--paper);padding:2px 6px;border-radius:6px;border:1px solid var(--line)}
+  .note{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+  ::selection{background:rgba(91,79,196,.2)}
+  code{overflow-wrap:anywhere}
+  @media (max-width:560px){table{font-size:14px}th,td{padding:8px 6px}}
+</style>
+</head>
+<body>
+<main>
+  <a class="back" href="./">← Aurea Studio</a>
+  <h1>Політики Aurea Studio</h1>
+  <p class="lead">Підпис коду, конфіденційність і як видалити програму.</p>
+  <p class="lead"><a href="#code-signing-policy">Code signing policy</a> · <a href="#privacy">Конфіденційність</a> · <a href="#uninstall">Як видалити</a></p>
+
+  <h2 id="code-signing-policy">Code signing policy</h2>
+  <p>Aurea Studio is free, open-source software (MIT license). Release binaries are built from the public source code at <a href="https://github.com/vana09179-hash/aurea-studio">github.com/vana09179-hash/aurea-studio</a> by GitHub Actions (<a href="https://github.com/vana09179-hash/aurea-studio/blob/main/.github/workflows/build.yml">build.yml</a>). Nothing is built or signed on a personal computer.</p>
+  <p class="note">Status: an application for free Windows code signing through SignPath Foundation has been prepared. Until it is approved, Windows builds are unsigned and macOS builds carry only an ad-hoc signature.</p>
+  <h3>Team roles</h3>
+  <table>
+    <tr><th>Role</th><th>Members</th></tr>
+    <tr><td>Committers and reviewers</td><td><a href="https://github.com/vana09179-hash">vana09179-hash</a></td></tr>
+    <tr><td>Approvers</td><td><a href="https://github.com/vana09179-hash">vana09179-hash</a></td></tr>
+  </table>
+  <ul>
+    <li>Every change from outside the team arrives as a pull request and is reviewed by a committer before merging. Automated tests (<a href="https://github.com/vana09179-hash/aurea-studio/actions/workflows/test.yml">test.yml</a>) must pass.</li>
+    <li>Each release is approved manually by an approver before it is signed.</li>
+    <li>Only binaries built from this repository are signed. Third-party components (Electron, PptxGenJS, JSZip, fonts under the SIL Open Font License) are open source.</li>
+    <li>All team members use multi-factor authentication for GitHub.</li>
+  </ul>
+
+  <h2 id="privacy">Конфіденційність</h2>
+  <p>Aurea Studio не збирає статистику, не має реклами й не надсилає ваші презентації нікуди. Файли зберігаються лише на вашому комп’ютері.</p>
+  <p>Програма звертається до інших сервісів тільки тоді, коли ви самі запускаєте відповідну функцію:</p>
+  <table>
+    <tr><th>Функція</th><th>Куди надсилається</th><th>Що надсилається</th></tr>
+    <tr><td>Генерація зображень і «Презентація з ШІ», безкоштовний режим</td><td><a href="https://pollinations.ai">Pollinations.ai</a></td><td>Текст вашого запиту</td></tr>
+    <tr><td>Те саме з вашим ключем Gemini</td><td><a href="https://policies.google.com/privacy">Google Gemini API</a></td><td>Текст запиту і ваш ключ. Ключ зберігається лише на цьому комп’ютері</td></tr>
+    <tr><td>Пошук зображень</td><td><a href="https://foundation.wikimedia.org/wiki/Policy:Privacy_policy">Wikimedia Commons, Wikidata</a>, <a href="https://openverse.org/privacy">Openverse</a></td><td>Пошукові слова</td></tr>
+    <tr><td>Ідеї з Pinterest</td><td><a href="https://policy.pinterest.com/privacy-policy">Pinterest</a></td><td>Пошукові слова (відкривається окреме вікно)</td></tr>
+    <tr><td>Посилання «Завантажити шрифт»</td><td>Google Fonts у вашому браузері</td><td>Назва шрифту</td></tr>
+  </table>
+  <p lang="en"><strong>English:</strong> This program will not transfer any information to other networked systems unless specifically requested by the user or the person installing or operating it. The services above are contacted only when the user starts the corresponding feature.</p>
+
+  <h2 id="uninstall">Як видалити</h2>
+  <p>Програма нічого не змінює в системі й не додає служб чи автозапуску.</p>
+  <h3>Windows</h3>
+  <p>Видаліть файл <code>AureaStudio-…-portable.exe</code>. Налаштування й автозбереження лежать у <code>%APPDATA%\Aurea Studio</code> — видаліть цю папку, щоб прибрати їх теж.</p>
+  <h3>macOS</h3>
+  <p>Перетягніть «Aurea Studio» з «Програм» у Кошик. Налаштування: <code>~/Library/Application Support/Aurea Studio</code>.</p>
+  <h3>Linux</h3>
+  <p>Видаліть розпаковану папку <code>AureaStudio-…-linux-x64</code>. Налаштування: <code>~/.config/Aurea Studio</code>.</p>
+  <p>Ваші файли <code>.aurea</code>, PDF і .pptx залишаються там, куди ви їх зберегли.</p>
+</main>
+</body>
+</html>

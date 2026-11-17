@@ -48,6 +48,19 @@ macOS і Linux збирає GitHub Actions (`.github/workflows/build.yml`) пр�
 
 Сайт лежить у `site/` і публікується на GitHub Pages (`.github/workflows/pages.yml`).
 
+## Code signing policy
+
+Release binaries are built only by GitHub Actions from this repository ([build.yml](.github/workflows/build.yml)); every release is approved manually.
+
+| Role | Members |
+|---|---|
+| Committers and reviewers | [vana09179-hash](https://github.com/vana09179-hash) |
+| Approvers | [vana09179-hash](https://github.com/vana09179-hash) |
+
+Status: Windows code signing through SignPath Foundation is being applied for; until then Windows builds are unsigned and macOS builds are ad-hoc signed.
+
+Privacy: this program will not transfer any information to other networked systems unless specifically requested by the user or the person installing or operating it. Details and uninstall instructions: [policy page](https://vana09179-hash.github.io/aurea-studio/policy.html).
+
 ## Участь
 
 Помилки й ідеї — у [Issues](https://github.com/vana09179-hash/aurea-studio/issues). Як надіслати зміни — [CONTRIBUTING.md](CONTRIBUTING.md).
