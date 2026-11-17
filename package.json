@@ -1,7 +1,7 @@
 {
   "name": "aurea-studio",
   "productName": "Aurea Studio",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "Aurea Studio — редактор анімованих презентацій",
   "main": "main.js",
   "author": {
