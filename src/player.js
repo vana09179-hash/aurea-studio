@@ -673,11 +673,13 @@
       case 'stagger': case 'maskUp': {
         if (!plainText) { fadeUp(); break; }
         const words = splitWords(t, el.content, type === 'maskUp');
-        const step = a.step || Math.max(30, Math.min(110, 1400 / Math.max(1, words.length)));
+        // clear word-by-word rhythm: short titles get a long gap, long paragraphs a short one
+        const step = a.step || Math.max(70, Math.min(300, 1800 / Math.max(1, words.length)));
+        const wd = Math.max(380, Math.min(dur * .7, step * 2.2));
         words.forEach((w, i) => w.animate(type === 'maskUp'
           ? [{ transform: 'translateY(110%)' }, { transform: 'none' }]
-          : [{ opacity: 0, transform: 'translateY(.55em)', filter: 'blur(12px)' }, { opacity: 1, transform: 'none', filter: 'blur(0px)' }],
-          { duration: dur * .85, delay: delay + i * step, easing: type === 'maskUp' ? EASES.sharp : ease, fill: 'backwards' }));
+          : [{ opacity: 0, transform: 'translateY(.55em)', filter: 'blur(10px)' }, { opacity: 1, transform: 'none', filter: 'blur(0px)' }],
+          { duration: wd, delay: delay + i * step, easing: type === 'maskUp' ? EASES.sharp : ease, fill: 'backwards' }));
         break;
       }
       case 'letters': {

@@ -181,7 +181,7 @@ input[type=range]:active::-webkit-slider-thumb{transform:scale(1.2)}
 .demo i{animation:2.2s var(--ease) infinite paused}
 .d-fadeUp i{width:60%;animation-name:dFade}
 .d-scaleIn i{width:26px;height:26px!important;border-radius:8px!important;animation-name:dScale}
-.d-stagger i{width:18%;animation-name:dFade}.d-stagger i:nth-child(2){animation-delay:.12s}.d-stagger i:nth-child(3){animation-delay:.24s}.d-stagger i:nth-child(4){animation-delay:.36s}
+.d-stagger i{width:18%;animation-name:dFade}.d-stagger i:nth-child(2){animation-delay:.3s}.d-stagger i:nth-child(3){animation-delay:.6s}.d-stagger i:nth-child(4){animation-delay:.9s}
 .d-counter{font:800 20px/1 Inter;color:#b79cff}
 .d-draw i{width:80%;height:3px!important;animation-name:dDraw;transform-origin:left}
 .d-shine i{width:70%;height:12px!important;background:linear-gradient(100deg,#9d8bff 40%,#fff 50%,#9d8bff 60%)!important;background-size:300% 100%!important;animation-name:dShine}
