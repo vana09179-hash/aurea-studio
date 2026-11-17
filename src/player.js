@@ -24,6 +24,10 @@
     bg = bg || {};
     const c = bg.color || '#0b0907';
     if (bg.grad === 'linear') return `linear-gradient(${bg.angle ?? 135}deg, ${c}, ${bg.color2 || c})`;
+    if (bg.grad === 'mesh') {
+      const m = bg.mesh && bg.mesh.length >= 4 ? bg.mesh : ['#7b6cff', '#e46fc4', '#22d3ee', '#ff9f8a'];
+      return `radial-gradient(65% 75% at 0% 0%, ${m[0]} 0%, transparent 62%), radial-gradient(60% 70% at 100% 0%, ${m[1]} 0%, transparent 60%), radial-gradient(70% 80% at 100% 100%, ${m[2]} 0%, transparent 62%), radial-gradient(65% 75% at 0% 100%, ${m[3]} 0%, transparent 60%), ${c}`;
+    }
     if (bg.grad === 'radial') return `radial-gradient(120% 120% at ${bg.cx ?? 50}% ${bg.cy ?? 35}%, ${bg.color2 || c} 0%, ${c} 62%)`;
     return c;
   }
@@ -209,7 +213,37 @@
     play: 'M7 4.5v15l12-7.5z',
     pen: 'M4 20l4-1L19 8l-3-3L5 16zM14 7l3 3',
     scroll: 'M7 4h11a2 2 0 0 1 2 2v1h-3M7 4a2 2 0 0 0-2 2v12a2 2 0 0 1-2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2M9 9h6M9 13h6',
-    gem: 'M6 3h12l4 6-10 12L2 9zM2 9h20M12 21L8 9l4-6 4 6z'
+    gem: 'M6 3h12l4 6-10 12L2 9zM2 9h20M12 21L8 9l4-6 4 6z',
+    home: 'M3 11l9-7 9 7M5 9.5V20h5v-6h4v6h5V9.5',
+    cap: 'M2 9l10-5 10 5-10 5zM6 11.2V16c3 2.6 9 2.6 12 0v-4.8M22 9v6',
+    flask: 'M9 3h6M10 3v6L4.6 18.4A1.8 1.8 0 0 0 6.2 21h11.6a1.8 1.8 0 0 0 1.6-2.6L14 9V3M7.5 15h9',
+    cloud: 'M7 18h10.5a4 4 0 0 0 .6-7.95A6 6 0 0 0 6.5 9 4.5 4.5 0 0 0 7 18z',
+    bolt: 'M13 2L4 14h7l-1 8 9-12h-7z',
+    lock: 'M6 11h12v10H6zM8.5 11V8a3.5 3.5 0 0 1 7 0v3M12 15v2',
+    key: 'M14.5 9.5a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0zM13.2 12.7L21 20.5M17.5 17l2-2M15 14.5l2-2',
+    search: 'M10.5 17a6.5 6.5 0 1 0 0-13 6.5 6.5 0 0 0 0 13zM15.5 15.5L21 21',
+    settings: 'M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4zM12 2.5v3M12 18.5v3M4.2 7l2.6 1.5M17.2 15.5l2.6 1.5M4.2 17l2.6-1.5M17.2 8.5l2.6-1.5',
+    code: 'M8.5 7L3.5 12l5 5M15.5 7l5 5-5 5M13.5 4.5l-3 15',
+    database: 'M4 6c0-1.7 3.6-3 8-3s8 1.3 8 3-3.6 3-8 3-8-1.3-8-3zM4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3',
+    phone: 'M7 2.5h10a1 1 0 0 1 1 1v17a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1v-17a1 1 0 0 1 1-1zM10.5 18.5h3',
+    laptop: 'M4.5 5h15v10h-15zM2.5 18.5h19M9.5 18.5l.5-1.5h4l.5 1.5',
+    cart: 'M2.5 3.5h3l2.2 11h10.5l2-8H7M9 20a1 1 0 1 0 0-2 1 1 0 0 0 0 2zM17 20a1 1 0 1 0 0-2 1 1 0 0 0 0 2z',
+    coin: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM14.8 9.2c-.5-1-1.6-1.6-2.8-1.6-1.6 0-2.8.9-2.8 2.1 0 2.8 5.6 1.4 5.6 4.3 0 1.2-1.2 2.2-2.8 2.2-1.3 0-2.4-.6-2.9-1.6M12 5.8v1.8M12 16.2V18',
+    growth: 'M3 17l6-6 4 4 8-8M15 7h6v6',
+    pie: 'M12 3a9 9 0 1 0 9 9h-9zM14.5 2.8A8.6 8.6 0 0 1 21.2 9.5H14.5z',
+    puzzle: 'M9 3.5h3.5v2a1.8 1.8 0 1 0 3.5 0v-2H20V8h-2a1.8 1.8 0 1 0 0 3.5h2V20H4v-4.5h2A1.8 1.8 0 1 0 6 12H4V3.5z',
+    compass: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM15.8 8.2l-2 5.6-5.6 2 2-5.6z',
+    map: 'M3 6.5l6-2.5 6 2.5 6-2.5v13.5l-6 2.5-6-2.5-6 2.5zM9 4v13.5M15 6.5V20',
+    tree: 'M12 21v-5M12 3l6 8h-3.5l4.5 5H5l4.5-5H6z',
+    drop: 'M12 3c3.5 4.4 6.5 8 6.5 11.3A6.5 6.5 0 0 1 5.5 14.3C5.5 11 8.5 7.4 12 3z',
+    fire: 'M12 21c-3.9 0-6.5-2.6-6.5-6.1 0-3.4 2.6-5.3 3.9-8.4.9 2 2.2 3 3.4 3.4C13.9 7 13.1 4.6 12.4 3c4.2 2.4 6.1 6.5 6.1 10.4 0 4.6-2.7 7.6-6.5 7.6z',
+    planet: 'M12 17.5a5.5 5.5 0 1 0 0-11 5.5 5.5 0 0 0 0 11zM6.4 13.8C3.3 15.6 1.7 17.3 2.3 18.3c.9 1.6 6.4-.3 12.3-4s9.7-8.3 8.8-9.9c-.6-1-2.9-.8-6 .5',
+    microscope: 'M8 17h8M6.5 21h11M12 17a5 5 0 0 0 5-5M9.5 3.5l3 1.5-3.5 7-3-1.5zM9.5 11.5l1.3 2.5',
+    palette: 'M12 3a9 9 0 0 0 0 18c1.5 0 2-1 1.5-2.2-.5-1.3.4-2.3 1.7-2.3H17a4 4 0 0 0 4-4C21 7 17 3 12 3zM7.5 11.5h.01M10 7.5h.01M14.5 7.5h.01M17 11h.01',
+    idea: 'M9 18h6M10 21h4M12 3a6 6 0 0 0-3.6 10.8c.7.6 1.1 1.4 1.1 2.2h5c0-.8.4-1.6 1.1-2.2A6 6 0 0 0 12 3z',
+    handshake: 'M2.5 12l4-4.5 4 1.5 3-2 3 .5 5 4.5M2.5 12l4 4.5 2 1.5c.8.6 1.8.5 2.4-.2M21.5 12.5l-4 4-2.5 1.5c-.8.5-1.8.3-2.4-.4l-3.6-4.1',
+    medal: 'M8 2.5h8l-2 6h-4zM12 21.5a6 6 0 1 0 0-12 6 6 0 0 0 0 12zM12 13l.9 1.8 2 .3-1.4 1.4.3 2-1.8-.9-1.8.9.3-2-1.4-1.4 2-.3z',
+    video: 'M3 6.5h12v11H3zM15 10.5l6-3.5v10l-6-3.5'
   };
   function iconNode(el) {
     const s = el.style || {};
@@ -231,6 +265,85 @@
   }
 
   // ---------------- charts ----------------
+  function tableNode(el) {
+    const s = el.style || {}, rows = (el.rows && el.rows.length) ? el.rows : [['']];
+    const line = s.lineColor || s.color || '#ffffff', head = s.header !== false;
+    const box = div('a-table');
+    box.style.cssText = `position:absolute;inset:0;display:flex;flex-direction:column;border-radius:${s.radius ?? 18}px;overflow:hidden;font-family:${fontCss(s.font || 'Inter')};font-size:${s.size || 24}px;color:${s.color || '#ffffff'};background:${hexA(s.bodyBg || '#ffffff', s.bodyOp ?? .05)};box-shadow:inset 0 0 0 ${s.border ?? 1}px ${hexA(line, .2)}`;
+    const cols = Math.max(...rows.map(r => r.length));
+    rows.forEach((r, ri) => {
+      const tr = div('a-tr');
+      const isHead = head && ri === 0;
+      tr.style.cssText = `flex:1;display:grid;grid-template-columns:repeat(${cols},1fr);min-height:0;${ri ? `border-top:1px solid ${hexA(line, .12)};` : ''}${isHead ? `background:${s.headBg || '#7b6cff'};color:${s.headColor || '#ffffff'};font-weight:700;` : (s.zebra && ri % 2 === 0 ? `background:${hexA(line, .045)};` : '')}`;
+      for (let ci = 0; ci < cols; ci++) {
+        const td = div('a-td');
+        const al = (s.align || 'left');
+        td.style.cssText = `padding:${s.padY ?? 12}px ${s.padX ?? 20}px;display:flex;align-items:center;justify-content:${al === 'center' ? 'center' : al === 'right' ? 'flex-end' : 'flex-start'};text-align:${al};min-width:0;overflow:hidden;line-height:1.25;${ci ? `border-left:1px solid ${hexA(line, .08)};` : ''}`;
+        td.textContent = r[ci] ?? '';
+        tr.appendChild(td);
+      }
+      box.appendChild(tr);
+    });
+    return box;
+  }
+
+  // Waterfall: running total of positive/negative steps; items with d.t === true are totals
+  function waterfallNode(el, box, s, data, fmt, col, fs) {
+    const W = el.w, H = el.h, padB = fs * 2.4, padT = fs * 1.6, n = Math.max(1, data.length);
+    let run = 0; const bars = data.map(d => { const v = +d.v || 0; if (d.t) { const b = { a: 0, b: run, v: run, t: true }; return b; } const b = { a: run, b: run + v, v }; run += v; return b; });
+    const lo = Math.min(0, ...bars.map(b => Math.min(b.a, b.b))), hi = Math.max(1, ...bars.map(b => Math.max(b.a, b.b)));
+    const y = v => padT + (hi - v) / (hi - lo) * (H - padT - padB), cw = W / n;
+    const svg = svgEl('svg', { viewBox: `0 0 ${W} ${H}`, width: W, height: H }); svg.style.cssText = 'position:absolute;inset:0;overflow:visible';
+    bars.forEach((b, i) => {
+      const top = y(Math.max(b.a, b.b)), bot = y(Math.min(b.a, b.b)), x = i * cw + cw * .18, w = cw * .64;
+      const c = data[i].c || (b.t ? (s.totalColor || '#9d8bff') : b.v >= 0 ? (s.upColor || '#4ade80') : (s.downColor || '#f87171'));
+      const r = svgEl('rect', { x, y: top, width: w, height: Math.max(2, bot - top), rx: Math.min(10, w / 6), fill: c, class: 'a-bar' }); r.style.transformOrigin = `${x + w / 2}px ${bot}px`; svg.appendChild(r);
+      if (i < bars.length - 1 && !bars[i + 1].t) svg.appendChild(svgEl('line', { x1: x + w, x2: (i + 1) * cw + cw * .18, y1: y(b.t ? b.b : b.b), y2: y(b.t ? b.b : b.b), stroke: hexA(col, .35), 'stroke-dasharray': '4 4' }));
+      const v = svgEl('text', { x: x + w / 2, y: top - fs * .35, 'text-anchor': 'middle', fill: col, 'font-size': fs * .9, 'font-weight': 700, class: 'a-cv' }); v.textContent = (b.v > 0 && !b.t ? '+' : '') + fmt(b.v); svg.appendChild(v);
+      const l = svgEl('text', { x: x + w / 2, y: H - fs * .7, 'text-anchor': 'middle', fill: col, 'font-size': fs * .85, opacity: .75 }); l.textContent = data[i].l; svg.appendChild(l);
+    });
+    box.appendChild(svg); return box;
+  }
+  // Gantt: d.s = start, d.v = duration (same units)
+  function ganttNode(el, box, s, data, col, fs, cOf) {
+    const W = el.w, H = el.h, labW = Math.min(W * .3, fs * 9), top = fs * 1.8;
+    const end = Math.max(1, ...data.map(d => (+d.s || 0) + (+d.v || 0)));
+    const rowH = (H - top) / Math.max(1, data.length);
+    const svg = svgEl('svg', { viewBox: `0 0 ${W} ${H}`, width: W, height: H }); svg.style.cssText = 'position:absolute;inset:0;overflow:visible';
+    const ticks = Math.min(12, Math.ceil(end));
+    for (let k = 0; k <= ticks; k++) {
+      const x = labW + (W - labW) * k / ticks;
+      svg.appendChild(svgEl('line', { x1: x, x2: x, y1: top - fs * .2, y2: H, stroke: hexA(col, .1) }));
+      const t = svgEl('text', { x, y: top - fs * .5, 'text-anchor': 'middle', fill: col, 'font-size': fs * .7, opacity: .6 }); t.textContent = (s.unitPrefix || '') + Math.round(end * k / ticks); svg.appendChild(t);
+    }
+    data.forEach((d, i) => {
+      const yy = top + i * rowH, x = labW + (W - labW) * (+d.s || 0) / end, w = Math.max(6, (W - labW) * (+d.v || 0) / end);
+      const l = svgEl('text', { x: labW - fs * .5, y: yy + rowH / 2 + fs * .32, 'text-anchor': 'end', fill: col, 'font-size': fs * .85 }); l.textContent = d.l; svg.appendChild(l);
+      const r = svgEl('rect', { x, y: yy + rowH * .2, width: w, height: rowH * .6, rx: Math.min(rowH * .3, 14), fill: cOf(d, i), class: 'a-bar' }); r.style.transformBox = 'fill-box'; r.style.transformOrigin = 'left center'; svg.appendChild(r);
+    });
+    box.appendChild(svg); return box;
+  }
+  // Sankey (two columns): d.l = 'Source → Target', d.v = flow
+  function sankeyNode(el, box, s, data, col, fs, palette) {
+    const W = el.w, H = el.h, nodeW = Math.max(14, fs * .6), labPad = fs * 6, gap = fs * .6;
+    const links = data.map(d => { const [a, b] = String(d.l).split(/\s*(?:→|->|>)\s*/); return { a: (a || '').trim(), b: (b || '').trim() || '—', v: Math.max(0, +d.v || 0), c: d.c }; }).filter(l => l.v > 0);
+    const srcs = [...new Set(links.map(l => l.a))], dsts = [...new Set(links.map(l => l.b))];
+    const total = links.reduce((x, l) => x + l.v, 0) || 1;
+    const lay = (names, side) => { const avail = H - gap * (names.length - 1); let yy = 0; const m = {}; names.forEach(n => { const v = links.filter(l => (side ? l.b : l.a) === n).reduce((x, l) => x + l.v, 0); const h = avail * v / total; m[n] = { y: yy, h, used: 0 }; yy += h + gap; }); return m; };
+    const L = lay(srcs, 0), R = lay(dsts, 1), x0 = labPad, x1 = W - labPad - nodeW;
+    const svg = svgEl('svg', { viewBox: `0 0 ${W} ${H}`, width: W, height: H }); svg.style.cssText = 'position:absolute;inset:0;overflow:visible';
+    links.forEach((l, i) => {
+      const a = L[l.a], b = R[l.b], hgt = (H - gap * (srcs.length - 1)) * l.v / total;
+      const ya = a.y + a.used, yb = b.y + b.used; a.used += hgt; b.used += hgt * ((H - gap * (dsts.length - 1)) / (H - gap * (srcs.length - 1)));
+      const c = l.c || palette[srcs.indexOf(l.a) % palette.length], mx = (x0 + nodeW + x1) / 2;
+      const hb = hgt * ((H - gap * (dsts.length - 1)) / (H - gap * (srcs.length - 1)));
+      svg.appendChild(svgEl('path', { d: `M${x0 + nodeW},${ya} C${mx},${ya} ${mx},${yb} ${x1},${yb} L${x1},${yb + hb} C${mx},${yb + hb} ${mx},${ya + hgt} ${x0 + nodeW},${ya + hgt} Z`, fill: hexA(c, .38), class: 'a-bar', style: 'transform-box:fill-box;transform-origin:left center' }));
+    });
+    const node = (m, x, names, anchor, dx) => names.forEach((n, i) => { const k = m[n]; svg.appendChild(svgEl('rect', { x, y: k.y, width: nodeW, height: Math.max(2, k.h), rx: 4, fill: palette[i % palette.length] })); const t = svgEl('text', { x: x + dx, y: k.y + k.h / 2 + fs * .32, 'text-anchor': anchor, fill: col, 'font-size': fs * .85 }); t.textContent = n; svg.appendChild(t); });
+    node(L, x0, srcs, 'end', -fs * .5); node(R, x1, dsts, 'start', nodeW + fs * .5);
+    box.appendChild(svg); return box;
+  }
+
   function chartNode(el) {
     const s = el.style || {}, data = el.data || [], kind = el.chart || 'bar';
     const box = div('a-chart a-chart-' + kind);
@@ -266,6 +379,9 @@
       box.appendChild(mid);
       return box;
     }
+    if (kind === 'waterfall') return waterfallNode(el, box, s, data, fmt, col, fs);
+    if (kind === 'gantt') return ganttNode(el, box, s, data, col, fs, cOf);
+    if (kind === 'sankey') return sankeyNode(el, box, s, data, col, fs, palette);
     if (kind === 'hbar') {
       box.style.display = 'flex'; box.style.flexDirection = 'column'; box.style.justifyContent = 'space-around';
       data.forEach((d, i) => {
@@ -282,13 +398,17 @@
     // vertical bars
     box.style.display = 'flex'; box.style.alignItems = 'flex-end'; box.style.gap = (s.gap ?? 4) + '%';
     box.style.padding = `0 ${fs * .4}px`;
-    const plotH = el.h - fs * 3.4;
+    const colW = (el.w - fs * .8) / Math.max(1, data.length);
+    const longest = Math.max(1, ...data.map(d => String(d.l).length));
+    const tilt = longest * fs * .55 > colW * 1.05;            // labels would collide -> tilt them
+    const every = Math.max(1, Math.ceil((fs * 1.3) / Math.max(1, colW)));  // very dense -> show every n-th
+    const plotH = el.h - fs * (tilt ? 4.6 : 3.4);
     data.forEach((d, i) => {
       const colm = div(); colm.style.cssText = `flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;min-width:0`;
       const val = div('a-cv'); val.style.cssText = `font-weight:700;margin-bottom:${fs * .3}px`; val.textContent = fmt(d.v);
       const bar = div('a-bar');
       bar.style.cssText = `width:100%;height:${Math.max(2, (+d.v || 0) / max * plotH)}px;border-radius:${s.radius ?? 14}px ${s.radius ?? 14}px 4px 4px;background:linear-gradient(180deg, ${cOf(d, i)}, ${hexA(cOf(d, i), .35)});transform-origin:bottom center;box-shadow:0 0 30px ${hexA(cOf(d, i), .25)}`;
-      const lab = div(); lab.style.cssText = `margin-top:${fs * .45}px;opacity:.75;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%`; lab.textContent = d.l;
+      const lab = div(); lab.style.cssText = tilt ? `margin-top:${fs * .5}px;opacity:.75;white-space:nowrap;transform:rotate(-35deg);transform-origin:100% 0;height:${fs * 1.6}px;align-self:flex-end;font-size:${fs * .85}px` : `margin-top:${fs * .45}px;opacity:.75;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%`; lab.textContent = i % every === 0 ? d.l : '';
       colm.append(val, bar, lab); box.appendChild(colm);
     });
     return box;
@@ -373,6 +493,8 @@
       inn.appendChild(lineSvg(el));
     } else if (el.type === 'image') {
       inn.appendChild(imageNode(el, project, opts));
+    } else if (el.type === 'table') {
+      inn.appendChild(tableNode(el));
     } else if (el.type === 'chart') {
       inn.appendChild(chartNode(el));
     } else if (el.type === 'icon') {
@@ -421,6 +543,8 @@
   }
 
   // ---------------- animation engine ----------------
+  // custom curve from the Bezier editor: a.ease === 'custom', a.bez = [x1, y1, x2, y2]
+  const easeOf = (a, d) => (a && a.ease === 'custom' && Array.isArray(a.bez) && a.bez.length === 4) ? `cubic-bezier(${a.bez.map(v => +(+v).toFixed(3)).join(',')})` : ((a && EASES[a.ease]) || d);
   const EASES = {
     smooth: 'cubic-bezier(.2,.75,.2,1)',
     spring: 'cubic-bezier(.34,1.5,.5,1)',
@@ -433,7 +557,7 @@
     none: 'Без анімації',
     fadeUp: 'Fade-up + blur', scaleIn: 'Scale-in', blurIn: 'Розмиття', slideLeft: 'Виїзд', flipIn: '3D-переворот',
     bounceIn: 'Пружина', rotateIn: 'Поворот', zoomOut: 'Наближення', wipeDown: 'Шторка',
-    stagger: 'По черзі (слова)', letters: 'По буквах', maskUp: 'Підйом з маски', typewriter: 'Друкарська машинка',
+    stagger: 'По черзі (слова)', lines: 'По рядках', letters: 'По буквах', maskUp: 'Підйом з маски', typewriter: 'Друкарська машинка',
     shine: 'Shine', highlight: 'Маркер', counter: 'Лічильник',
     draw: 'Малювання', grow: 'Ріст (діаграми)', kenburns: 'Ken Burns',
     float: 'Ширяння', pulse: 'Пульс', glow: 'Сяйво', wiggle: 'Похитування', spin: 'Обертання',
@@ -443,7 +567,7 @@
   };
   const ANIM_GROUPS = [
     ['Поява', ['none', 'fadeUp', 'scaleIn', 'blurIn', 'slideLeft', 'flipIn', 'bounceIn', 'rotateIn', 'zoomOut', 'wipeDown', 'swing', 'elastic', 'spotlight', 'glitch', 'flicker', 'rollIn', 'unfold', 'drop', 'tilt3D']],
-    ['Текст', ['stagger', 'letters', 'scatter', 'maskUp', 'typewriter', 'shine', 'highlight', 'counter']],
+    ['Текст', ['stagger', 'lines', 'letters', 'scatter', 'maskUp', 'typewriter', 'shine', 'highlight', 'counter']],
     ['Графіка', ['draw', 'grow', 'kenburns']],
     ['Постійні', ['float', 'pulse', 'glow', 'wiggle', 'spin', 'wave', 'heartbeat', 'hue']]
   ];
@@ -514,7 +638,7 @@
     const inn = n.querySelector(':scope > .a-in');
     const dur = a.dur || 900;
     const delay = (o.ignoreDelay ? 0 : (a.delay || 0)) + (o.offset || 0);
-    const ease = EASES[a.ease] || EASE;
+    const ease = easeOf(a, EASE);
     const K = (frames, x = {}) => inn.animate(frames, { duration: dur, delay, easing: ease, fill: 'backwards', ...x });
     const fade = (d = 500) => inn.animate([{ opacity: 0 }, { opacity: 1 }], { duration: d, delay, fill: 'backwards' });
     const fadeUp = () => K([{ opacity: 0, transform: 'translateY(60px)', filter: 'blur(16px)' }, { opacity: 1, transform: 'none', filter: 'blur(0px)' }]);
@@ -523,17 +647,29 @@
     const loop = (frames, opts) => inn.animate(frames, { delay: delay + 500, iterations: Infinity, ...opts });
     switch (type) {
       case 'fadeUp': fadeUp(); break;
-      case 'scaleIn': K([{ opacity: 0, transform: 'scale(.78)', filter: 'blur(10px)' }, { opacity: 1, transform: 'none', filter: 'blur(0px)' }], { easing: EASES[a.ease] || EASES.spring }); break;
+      case 'scaleIn': K([{ opacity: 0, transform: 'scale(.78)', filter: 'blur(10px)' }, { opacity: 1, transform: 'none', filter: 'blur(0px)' }], { easing: easeOf(a, EASES.spring) }); break;
       case 'blurIn': K([{ opacity: 0, transform: 'scale(1.08)', filter: 'blur(36px)' }, { opacity: 1, transform: 'none', filter: 'blur(0px)' }], { duration: dur * 1.2 }); break;
       case 'slideLeft': {
         const d = { left: 'translateX(-160px)', right: 'translateX(160px)', up: 'translateY(140px)', down: 'translateY(-140px)' }[a.dir || 'left'];
         K([{ opacity: 0, transform: d, filter: 'blur(6px)' }, { opacity: 1, transform: 'none', filter: 'blur(0px)' }]); break;
       }
       case 'flipIn': inn.style.transformOrigin = '50% 0%'; K([{ opacity: 0, transform: 'perspective(1400px) rotateX(-75deg) translateY(-20px)' }, { opacity: 1, transform: 'perspective(1400px) rotateX(0deg)' }], { duration: dur * 1.15 }); break;
-      case 'bounceIn': K([{ opacity: 0, transform: 'scale(.3)' }, { opacity: 1, transform: 'scale(1)', offset: .35 }, { transform: 'scale(1)' }], { easing: EASES[a.ease] || EASES.bounce, duration: dur * 1.4 }); break;
-      case 'rotateIn': K([{ opacity: 0, transform: 'rotate(-14deg) scale(.82) translateY(50px)', filter: 'blur(8px)' }, { opacity: 1, transform: 'none', filter: 'blur(0px)' }], { easing: EASES[a.ease] || EASES.spring }); break;
+      case 'bounceIn': K([{ opacity: 0, transform: 'scale(.3)' }, { opacity: 1, transform: 'scale(1)', offset: .35 }, { transform: 'scale(1)' }], { easing: easeOf(a, EASES.bounce), duration: dur * 1.4 }); break;
+      case 'rotateIn': K([{ opacity: 0, transform: 'rotate(-14deg) scale(.82) translateY(50px)', filter: 'blur(8px)' }, { opacity: 1, transform: 'none', filter: 'blur(0px)' }], { easing: easeOf(a, EASES.spring) }); break;
       case 'zoomOut': K([{ opacity: 0, transform: 'scale(1.7)', filter: 'blur(24px)' }, { opacity: 1, transform: 'none', filter: 'blur(0px)' }], { duration: dur * 1.2 }); break;
-      case 'wipeDown': K([{ clipPath: 'inset(0 0 100% 0)' }, { clipPath: 'inset(0 0 0% 0)' }], { duration: dur * 1.2, easing: EASES[a.ease] || EASES.sharp }); break;
+      case 'wipeDown': K([{ clipPath: 'inset(0 0 100% 0)' }, { clipPath: 'inset(0 0 0% 0)' }], { duration: dur * 1.2, easing: easeOf(a, EASES.sharp) }); break;
+      case 'lines': {
+        if (!plainText) { fadeUp(); break; }
+        const words = splitWords(t, el.content, true);
+        // group words into visual lines by their vertical position, then reveal line after line
+        const tops = [...new Set(words.map(w => Math.round(w.offsetTop)))].sort((x, y) => x - y);
+        const step = a.step || 160;
+        words.forEach((w) => {
+          const li = tops.indexOf(Math.round(w.offsetTop));
+          w.animate([{ transform: 'translateY(105%)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: dur * .9, delay: delay + li * step, easing: ease, fill: 'backwards' });
+        });
+        break;
+      }
       case 'stagger': case 'maskUp': {
         if (!plainText) { fadeUp(); break; }
         const words = splitWords(t, el.content, type === 'maskUp');
@@ -549,7 +685,7 @@
         const chars = splitChars(t, el.content);
         const step = Math.max(12, Math.min(45, 1300 / Math.max(1, chars.length)));
         chars.forEach((c, i) => c.animate([{ opacity: 0, transform: 'translateY(.5em) rotate(10deg)', filter: 'blur(8px)' }, { opacity: 1, transform: 'none', filter: 'blur(0px)' }],
-          { duration: dur * .7, delay: delay + i * step, easing: EASES[a.ease] || EASES.spring, fill: 'backwards' }));
+          { duration: dur * .7, delay: delay + i * step, easing: easeOf(a, EASES.spring), fill: 'backwards' }));
         break;
       }
       case 'typewriter': {
@@ -582,7 +718,7 @@
       case 'grow': {
         fade(350);
         const bars = n.querySelectorAll('.a-bar');
-        bars.forEach((b, i) => b.animate([{ transform: b.style.transformOrigin.startsWith('left') ? 'scaleX(0)' : 'scaleY(0)' }, { transform: 'none' }], { duration: dur * 1.2, delay: delay + 150 + i * 110, easing: EASES[a.ease] || EASES.spring, fill: 'backwards' }));
+        bars.forEach((b, i) => b.animate([{ transform: b.style.transformOrigin.startsWith('left') ? 'scaleX(0)' : 'scaleY(0)' }, { transform: 'none' }], { duration: dur * 1.2, delay: delay + 150 + i * 110, easing: easeOf(a, EASES.spring), fill: 'backwards' }));
         n.querySelectorAll('.a-seg').forEach((c, i) => { const L = +c.dataset.len; c.animate([{ strokeDasharray: `0 9999` }, { strokeDasharray: `${Math.max(0, L - 3)} 9999` }], { duration: dur * 1.3, delay: delay + 200 + i * 220, easing: EASES.sharp, fill: 'backwards' }); });
         n.querySelectorAll('.a-cv').forEach((v, i) => countUp(v, v.textContent, delay + 150 + i * 110, dur * 1.6));
         if (!bars.length && !n.querySelector('.a-seg')) { inn.style.transformOrigin = '50% 100%'; K([{ transform: 'scaleY(0)' }, { transform: 'none' }], { easing: EASES.spring }); }
@@ -676,10 +812,10 @@
         chars.forEach((c, i) => c.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(-.18em)' }, { transform: 'translateY(0)' }], { duration: 1400, delay: delay + 400 + i * 70, iterations: Infinity, easing: 'ease-in-out' }));
         break;
       }
-      case 'rollIn': K([{ opacity: 0, transform: 'translateX(-240px) rotate(-120deg)', filter: 'blur(6px)' }, { opacity: 1, transform: 'none', filter: 'blur(0px)' }], { easing: EASES[a.ease] || EASES.spring, duration: dur * 1.2 }); break;
+      case 'rollIn': K([{ opacity: 0, transform: 'translateX(-240px) rotate(-120deg)', filter: 'blur(6px)' }, { opacity: 1, transform: 'none', filter: 'blur(0px)' }], { easing: easeOf(a, EASES.spring), duration: dur * 1.2 }); break;
       case 'unfold': K([{ opacity: 0, transform: 'scaleY(.02) scaleX(.6)', filter: 'blur(10px) brightness(2)' }, { opacity: 1, transform: 'scaleY(.06) scaleX(1)', filter: 'blur(4px) brightness(1.6)', offset: .35 }, { opacity: 1, transform: 'none', filter: 'blur(0px) brightness(1)' }], { duration: dur * 1.3, easing: EASES.sharp }); break;
       case 'drop': K([{ opacity: 0, transform: 'translateY(-420px)' }, { opacity: 1, transform: 'translateY(0)', offset: .55 }, { transform: 'translateY(-38px)', offset: .72 }, { transform: 'translateY(0)', offset: .86 }, { transform: 'translateY(-10px)', offset: .93 }, { transform: 'none' }], { duration: dur * 1.5, easing: 'ease-in' }); break;
-      case 'tilt3D': inn.style.transformOrigin = '0% 50%'; K([{ opacity: 0, transform: 'perspective(1600px) rotateY(70deg) translateX(-60px)', filter: 'blur(6px)' }, { opacity: 1, transform: 'perspective(1600px) rotateY(0deg)', filter: 'blur(0px)' }], { duration: dur * 1.2, easing: EASES[a.ease] || EASES.smooth }); break;
+      case 'tilt3D': inn.style.transformOrigin = '0% 50%'; K([{ opacity: 0, transform: 'perspective(1600px) rotateY(70deg) translateX(-60px)', filter: 'blur(6px)' }, { opacity: 1, transform: 'perspective(1600px) rotateY(0deg)', filter: 'blur(0px)' }], { duration: dur * 1.2, easing: easeOf(a, EASES.smooth) }); break;
       case 'heartbeat': fade(); loop([{ scale: '1' }, { scale: '1.14', offset: .14 }, { scale: '1.03', offset: .28 }, { scale: '1.12', offset: .42 }, { scale: '1', offset: .7 }, { scale: '1' }], { duration: 1500, easing: 'ease-in-out' }); break;
       case 'hue': fade(); loop([{ filter: 'hue-rotate(0deg)' }, { filter: 'hue-rotate(360deg)' }], { duration: 6000, easing: 'linear' }); break;
       default: fadeUp();

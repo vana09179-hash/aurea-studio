@@ -275,6 +275,11 @@ ipcMain.handle('net:image', async (_e, url) => {
 // (stored only on this computer in userData/ai.json and sent only to generativelanguage.googleapis.com).
 const aiFile = () => path.join(userDir(), 'ai.json');
 const readAi = () => { try { return JSON.parse(fs.readFileSync(aiFile(), 'utf8')); } catch { return {}; } };
+// open a small allowlist of help links in the user's browser
+ipcMain.handle('open:link', async (_e, url) => {
+  const u = new URL(url);
+  if (u.protocol === 'https:' && ['aistudio.google.com', 'vana09179-hash.github.io'].includes(u.hostname)) await shell.openExternal(u.href);
+});
 ipcMain.handle('ai:settings', async (_e, patch) => {
   const cur = readAi();
   if (patch) { Object.assign(cur, patch); fs.writeFileSync(aiFile(), JSON.stringify(cur)); }
@@ -288,6 +293,84 @@ async function toEnglishPrompt(text) {
   } catch {}
   return text;
 }
+// AI presentation outline: free Pollinations text model (no key) or Gemini with the user's key
+function pickJson(text) {
+  try { return JSON.parse(text); } catch {}
+  const a = text.indexOf('{'), b = text.lastIndexOf('}');
+  if (a >= 0 && b > a) { try { return JSON.parse(text.slice(a, b + 1)); } catch {} }
+  return salvageOutline(text);
+}
+// The free model sometimes breaks the JSON structure (e.g. closes the slides array too early).
+// Recover every balanced {...} object that looks like a slide, plus the deck title/subtitle.
+function salvageOutline(text) {
+  const objs = [];
+  for (let i = 0; i < text.length; i++) {
+    if (text[i] !== '{') continue;
+    let depth = 0, inStr = false, esc = false;
+    for (let j = i; j < text.length; j++) {
+      const c = text[j];
+      if (inStr) { if (esc) esc = false; else if (c === '\\') esc = true; else if (c === '"') inStr = false; continue; }
+      if (c === '"') inStr = true; else if (c === '{') depth++;
+      else if (c === '}' && --depth === 0) { try { const o = JSON.parse(text.slice(i, j + 1)); if (o && Array.isArray(o.bullets)) objs.push(o); } catch {} break; }
+    }
+  }
+  if (!objs.length) return null;
+  const seen = new Set(), slides = objs.filter(o => o.title && !seen.has(o.title) && seen.add(o.title));
+  const m = (k) => { const r = new RegExp('"' + k + '"\\s*:\\s*"((?:[^"\\\\]|\\\\.)*)"').exec(text); try { return r ? JSON.parse('"' + r[1] + '"') : ''; } catch { return r ? r[1] : ''; } };
+  return { title: m('title'), subtitle: m('subtitle'), slides };
+}
+ipcMain.handle('ai:outline', async (_e, o) => {
+  const topic = String(o.topic || '').slice(0, 300).trim();
+  if (!topic) throw new Error('Вкажіть тему презентації');
+  const n = Math.min(10, Math.max(3, +o.count || 5));
+  const lang = o.lang || 'українська';
+  const shape = '{"title":"","subtitle":"","cover":"english photo prompt for the title slide","slides":[{"title":"","bullets":["","",""],"notes":"","image":"english photo prompt"}]}';
+  const ask = `Тема: ${topic}. Мова тексту: ${lang}. Рівно ${n} змістовних слайдів (без титульного й фінального). Пиши грамотною літературною українською, як у шкільному підручнику: лише перевірені прості факти, без вигаданих слів. Кожна теза — одне зрозуміле речення на 6–12 слів. Заголовки слайдів конкретні (2–5 слів). cover та image — короткі англійські описи реальних фото саме за темою (наприклад для теми «Сонячна система»: «the solar system planets orbiting the sun, space photo»). notes — 1–2 речення для доповідача. image — опис фото англійською без тексту на зображенні. Формат: ${shape}`;
+  const cfg = readAi();
+  if ((o.provider || cfg.provider) === 'gemini' && cfg.geminiKey) {
+    // try newer models first; skip ones that are missing for this key or temporarily overloaded
+    let lastMsg = '';
+    for (const model of ['gemini-2.5-flash', 'gemini-flash-latest', 'gemini-2.0-flash']) {
+      const r = await net.fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, { method: 'POST', headers: { 'content-type': 'application/json', 'x-goog-api-key': cfg.geminiKey }, body: JSON.stringify({ contents: [{ parts: [{ text: ask }] }], generationConfig: { responseMimeType: 'application/json', temperature: 0.6 } }) });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) {
+        lastMsg = j.error && j.error.message ? j.error.message : 'HTTP ' + r.status;
+        if (r.status === 400 || r.status === 401 || r.status === 403) throw new Error('Gemini: ключ не підходить (' + lastMsg + ')');
+        continue;
+      }
+      const d = pickJson((j.candidates?.[0]?.content?.parts || []).map(p => p.text || '').join(''));
+      if (d && Array.isArray(d.slides) && d.slides.length) { LOG('ai:outline gemini', model); return d; }
+      lastMsg = 'неочікувана відповідь';
+    }
+    throw new Error('Gemini: ' + lastMsg);
+  }
+  const sys = 'Reasoning: low. You are a presentation writer. Output ONLY one minified JSON object, no explanations, no markdown.';
+  let lastErr = null;
+  for (let k = 0; k < 4; k++) {
+    try {
+      const seed = Math.floor(Math.random() * 1e9); // a new seed each try: the service caches identical requests (incl. bad answers)
+      let content = '';
+      if (k < 3) {
+        const body = { model: 'openai-fast', reasoning_effort: 'low', max_tokens: 3500, seed, messages: [{ role: 'system', content: sys }, { role: 'user', content: ask }] };
+        const r = await net.fetch('https://text.pollinations.ai/openai', { method: 'POST', headers: { ...UA, 'content-type': 'application/json' }, body: JSON.stringify(body) });
+        if (r.status === 402 || r.status === 429 || r.status >= 500) { lastErr = new Error('Сервіс зайнятий (HTTP ' + r.status + ')'); await new Promise(res => setTimeout(res, 5000 * (k + 1))); continue; }
+        const j = await r.json().catch(() => ({}));
+        content = j.choices?.[0]?.message?.content || '';
+      } else {
+        // fallback: simple GET endpoint
+        const r = await net.fetch(`https://text.pollinations.ai/${encodeURIComponent(sys + ' ' + ask)}?model=openai-fast&json=true&seed=${seed}`, { headers: UA });
+        content = r.ok ? await r.text() : '';
+      }
+      LOG('ai:outline try', k, 'len', content.length, content.slice(0, 120).replace(/\s+/g, ' '));
+      if (SHOTS_DIR) try { fs.writeFileSync(path.join(SHOTS_DIR, `ai-outline-${k}.txt`), content); } catch {}
+      const d = pickJson(content);
+      if (d && Array.isArray(d.slides) && d.slides.length) return d;
+      lastErr = new Error('ШІ відповів не у форматі. Спробуйте ще раз або змініть тему.');
+    } catch (err) { lastErr = err; }
+  }
+  throw lastErr || new Error('Не вдалося отримати текст');
+});
+
 ipcMain.handle('ai:image', async (_e, o) => {
   const prompt = String(o.prompt || '').slice(0, 1500).trim();
   if (!prompt) throw new Error('Опишіть, що згенерувати');
@@ -464,6 +547,59 @@ ipcMain.handle('export:pdf', async (_e, { html, name }) => {
   return r.filePath;
 });
 
+// "Clean" PDF: every slide is rendered and captured as an image, so gradients, blur and soft shadows
+// look exactly like on screen (no banding or grey boxes that vector PDF export can produce).
+ipcMain.handle('export:pdfRaster', async (_e, { html, name }) => {
+  const r = SHOTS_DIR ? { filePath: path.join(SHOTS_DIR, 'export-clean.pdf') } : await dialog.showSaveDialog(win, { title: 'Експорт у PDF (як на екрані)', defaultPath: path.join(app.getPath('documents'), (name || 'Презентація') + '.pdf'), filters: [{ name: 'PDF', extensions: ['pdf'] }] });
+  if (r.canceled || !r.filePath) return null;
+  const tmp = path.join(os.tmpdir(), `aurea-raster-${Date.now()}.html`);
+  fs.writeFileSync(tmp, html, 'utf8');
+  const pw = new BrowserWindow({ show: false, width: 1920, height: 1080, useContentSize: true, webPreferences: { offscreen: true } });
+  const shotsHtml = path.join(os.tmpdir(), `aurea-raster-pages-${Date.now()}.html`);
+  try {
+    pw.webContents.setZoomFactor(1);
+    await pw.loadFile(tmp);
+    for (let i = 0; i < 100; i++) { if (await pw.webContents.executeJavaScript('window.__aureaReady === true').catch(() => false)) break; await new Promise(res => setTimeout(res, 100)); }
+    const count = await pw.webContents.executeJavaScript("document.documentElement.style.overflow='hidden'; document.querySelectorAll('.page').length");
+    const imgs = [];
+    for (let i = 0; i < count; i++) {
+      // show one page and scale it to fit the window exactly (independent of the Windows display scale)
+      const z = await pw.webContents.executeJavaScript(`(()=>{const p=document.querySelectorAll('.page');p.forEach((x,j)=>x.style.display=j===${i}?'':'none');const z=Math.min(innerWidth/1920,innerHeight/1080);document.documentElement.style.zoom=z;window.scrollTo(0,0);return z})()`);
+      await new Promise(res => setTimeout(res, 350));
+      const img = await pw.webContents.capturePage({ x: 0, y: 0, width: Math.floor(1920 * z), height: Math.floor(1080 * z) });
+      imgs.push(img.resize({ width: 1920, height: 1080, quality: 'best' }).toJPEG(94).toString('base64'));
+    }
+    fs.writeFileSync(shotsHtml, `<!doctype html><html><head><meta charset="utf-8"><style>@page{size:1920px 1080px;margin:0}html,body{margin:0;background:#000}img{display:block;width:1920px;height:1080px;break-after:page;page-break-after:always}</style></head><body>${imgs.map(b => `<img src="data:image/jpeg;base64,${b}">`).join('')}</body></html>`);
+    await pw.loadFile(shotsHtml);
+    await new Promise(res => setTimeout(res, 400));
+    const pdf = await pw.webContents.printToPDF({ printBackground: true, preferCSSPageSize: true, pageSize: { width: 20, height: 11.25 }, margins: { marginType: 'none' } });
+    fs.writeFileSync(r.filePath, pdf);
+    return r.filePath;
+  } finally {
+    pw.destroy();
+    for (const f of [tmp, shotsHtml]) { try { fs.unlinkSync(f); } catch {} }
+  }
+});
+
+// Version history: snapshots of the project kept locally in userData/history/<key>/ (last 40)
+const histDir = (key) => path.join(userDir(), 'history', String(key || 'untitled').replace(/[^\wЀ-ӿ-]+/g, '_').slice(0, 60));
+ipcMain.handle('hist:save', async (_e, { key, data, label }) => {
+  const d = histDir(key); fs.mkdirSync(d, { recursive: true });
+  const t = Date.now(); fs.writeFileSync(path.join(d, `${t}.aurea`), data, 'utf8');
+  if (label) fs.writeFileSync(path.join(d, `${t}.label`), String(label).slice(0, 80), 'utf8');
+  const files = fs.readdirSync(d).filter(f => f.endsWith('.aurea')).sort();
+  for (const f of files.slice(0, Math.max(0, files.length - 40))) { try { fs.unlinkSync(path.join(d, f)); fs.unlinkSync(path.join(d, f.replace('.aurea', '.label'))); } catch {} }
+  return t;
+});
+ipcMain.handle('hist:list', async (_e, key) => {
+  const d = histDir(key); if (!fs.existsSync(d)) return [];
+  return fs.readdirSync(d).filter(f => f.endsWith('.aurea')).sort().reverse().map(f => {
+    const t = +f.replace('.aurea', ''); let label = ''; try { label = fs.readFileSync(path.join(d, `${t}.label`), 'utf8'); } catch {}
+    return { t, label, size: fs.statSync(path.join(d, f)).size };
+  });
+});
+ipcMain.handle('hist:load', async (_e, { key, t }) => fs.readFileSync(path.join(histDir(key), `${+t}.aurea`), 'utf8'));
+
 ipcMain.handle('win:fullscreen', async (_e, on) => { if (win) win.setFullScreen(!!on); return true; });
 ipcMain.handle('shell:show', async (_e, p) => { shell.showItemInFolder(p); return true; });
 ipcMain.handle('app:argFile', async () => pendingOpen || argFile || null);
@@ -515,7 +651,9 @@ async function runShots() {
   try {
     await wait(2500);
     await shot('01-start');
-    const steps = await js('window.__demo ? window.__demo.steps() : []');
+    const onlyArg = argv.find(a => a.startsWith('--only='));
+    let steps = await js('window.__demo ? window.__demo.steps() : []');
+    if (onlyArg) { const only = onlyArg.slice(7).split(','); steps = steps.filter(s => only.some(o => s.startsWith(o))); }
     for (const s of steps) {
       const delay = await js(`window.__demo.run(${JSON.stringify(s)})`);
       await wait(delay || 1200);

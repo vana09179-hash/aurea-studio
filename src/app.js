@@ -260,7 +260,7 @@ async function renderStart() {
   if (rec && rec.data) {
     let title = 'Остання робота';
     try { title = JSON.parse(rec.data).title || title; } catch { }
-    recBlock = h('div', { class: 'ritem glass', onclick: () => openData(rec.data, null) }, h('span', { class: 'ic', style: 'background:rgba(232,194,122,.15);color:#e8c27a' }, icon('restore')),
+    recBlock = h('div', { class: 'ritem glass', onclick: () => openData(rec.data, null) }, h('span', { class: 'ic', style: 'background:rgba(155,92,246,.14);color:#9b5cf6' }, icon('restore')),
       h('div', {}, h('b', {}, 'Продовжити: ' + title), h('small', { style: 'direction:ltr' }, 'Автозбереження · ' + new Date(rec.time).toLocaleString('uk-UA'))));
   }
   const recentList = recent.map(r => h('div', { class: 'ritem glass', onclick: () => openPath(r.path), title: r.path },
@@ -272,6 +272,7 @@ async function renderStart() {
         h('button', { class: 'btn', onclick: () => openFile() }, icon('folder'), 'Відкрити…'),
         h('button', { class: 'btn', onclick: () => openHtmlFile(), title: 'Переглянути й показати готову HTML-презентацію' }, icon('code'), 'Відкрити HTML-презентацію'),
         h('button', { class: 'btn', onclick: () => openPptxFile(), title: 'Імпорт файлу .pptx' }, icon('slides'), 'Імпорт .pptx'),
+        h('button', { class: 'btn ai-cta', onclick: () => aiDeckDialog(), title: 'ШІ складе план, тексти й картинки' }, icon('sparkle2'), 'Презентація з ШІ'),
         h('button', { class: 'btn-primary', onclick: () => createFromTemplate(TPL.list.find(t => t.id === 'blank')) }, icon('plus'), 'Нова презентація'))),
     (recBlock || recent.length) ? h('div', {}, h('div', { class: 'shead' }, h('h3', {}, 'Продовжити роботу')), h('div', { class: 'recent' }, recBlock, ...recentList)) : null,
     h('div', { class: 'shead' }, h('h3', {}, 'Галерея шаблонів'), h('span', { style: 'color:var(--mu);font-size:12px' }, 'Наведіть курсор — побачите анімацію')),
@@ -1614,7 +1615,7 @@ addEventListener('beforeunload', () => { if (P && api.autosave) api.autosave(ser
 
 // ================= DEMO (automated screenshots) =================
 window.__demo = {
-  steps: () => ['02-editor-museum', '03-animation-tab', '04-icon-menu', '05-show-title', '06-show-morph-mid', '07-show-slide2', '08-presenter', '09-cosmos-editor', '10-show-cosmos-chart', '11-slide-tab', '12-export', '19-image-library', '20-image-search', '21-overview', '22-quickbar-chart', '23-dark-editor', '24-dark-anim', '25-dark-start', '26-light-start', '27-layers', '28-format', '29-palette', '30-pptx-dialog', '31-find', '32-notes', '33-pptx-roundtrip', '34-keys', '35-start-gallery', '36-redpitch', '37-dusk-show', '38-editorial', '39-nightgallery-show', '40-ai-dialog'],
+  steps: () => ['02-editor-museum', '03-animation-tab', '04-icon-menu', '05-show-title', '06-show-morph-mid', '07-show-slide2', '08-presenter', '09-cosmos-editor', '10-show-cosmos-chart', '11-slide-tab', '12-export', '19-image-library', '20-image-search', '21-overview', '22-quickbar-chart', '23-dark-editor', '24-dark-anim', '25-dark-start', '26-light-start', '27-layers', '28-format', '29-palette', '30-pptx-dialog', '31-find', '32-notes', '33-pptx-roundtrip', '34-keys', '35-start-gallery', '36-redpitch', '37-dusk-show', '38-editorial', '39-nightgallery-show', '40-ai-dialog', '41-ai-deck', '42-ai-deck-show', '43-table', '44-waterfall', '45-gantt', '46-sankey', '47-bezier', '48-mesh', '49-auto-comp', '50-history', '51-v5-pptx', '52-clean-pdf'],
   async run(step) {
     const T = (id) => TPL.list.find(t => t.id === id);
     const pick = (fn) => { const e = slideCur().elements.find(fn); sel = e ? [e.id] : []; renderOverlay(); renderProps(); };
@@ -1655,6 +1656,18 @@ window.__demo = {
       case '36-redpitch': await createFromTemplate(T('redpitch')); gotoSlide(1); sel = []; renderOverlay(); tab = 'anim'; renderProps(); return 1800;
       case '37-dusk-show': await createFromTemplate(T('dusk')); startShow(0, false, true); return 3200;
       case '38-editorial': endShow(); await createFromTemplate(T('editorial')); gotoSlide(0); sel = []; renderOverlay(); tab = 'design'; renderProps(); return 1800;
+      case '41-ai-deck': { $('.modal-bg')?.remove(); await goHome(); await aiDeckDialog(); await new Promise(r => setTimeout(r, 200)); $('.aitopic').value = 'Сонячна система'; [...document.querySelectorAll('.aimodal .aichip')].find(c => c.textContent === '4')?.click(); [...document.querySelectorAll('.aimodal .btn-primary')].pop().click(); for (let k = 0; k < 420 && document.querySelector('.aitopic'); k++) await new Promise(r => setTimeout(r, 1000)); gotoSlide(1); return 2500; }
+      case '42-ai-deck-show': startShow(1, false, true); return 3500;
+      case '43-table': { endShow(); $('.modal-bg')?.remove(); await createFromTemplate(T('saas')); gotoSlide(1); newSlide('blank'); window.__v5.addTable(); tab = 'design'; renderProps(); return 1500; }
+      case '44-waterfall': newSlide('blank'); addChart('waterfall'); tab = 'design'; renderProps(); $('#pbody').scrollTop = 0; return 2200;
+      case '45-gantt': newSlide('blank'); addChart('gantt'); tab = 'design'; renderProps(); return 2200;
+      case '46-sankey': newSlide('blank'); addChart('sankey'); tab = 'design'; renderProps(); return 2200;
+      case '47-bezier': { gotoSlide(0); const t = slideCur().elements.find(x => x.type === 'text' && x.anim && x.anim.type !== 'none'); sel = t ? [t.id] : []; renderOverlay(); tab = 'anim'; renderProps(); setAnim('ease', 'custom'); setAnim('bez', [.34, 1.56, .64, 1], 'canvas+props'); setTimeout(() => { const b = document.querySelector('.bez'); b?.scrollIntoView({ block: 'center' }); console.warn('BEZ-EDITOR', !!b, document.querySelector('.bez-lab')?.textContent); }, 300); return 1500; }
+      case '48-mesh': { sel = []; renderOverlay(); tab = 'slide'; const b = slideCur().bg; ck(); b.grad = 'mesh'; b.mesh = ['#7b6cff', '#e46fc4', '#22d3ee', '#ff9f8a']; b.color = '#0b0820'; changed('all'); return 1400; }
+      case '49-auto-comp': { let ts = slideCur().elements.filter(x => x.type === 'text').slice(0, 3); if (ts.length < 2) { addText(); addText(); ts = slideCur().elements.filter(x => x.type === 'text').slice(0, 3); } sel = ts.map(x => x.id); window.__v5.makeAuto('v'); sel = [ts[0].id]; setProp('comp', uid(), 'canvas+props'); tab = 'design'; renderProps(); $('#pbody').scrollTop = 99999; return 1400; }
+      case '50-history': await window.__v5.saveVersion('Тест'); await window.__v5.historyDialog(); return 1200;
+      case '51-v5-pptx': { $('.modal-bg')?.remove(); const buf = await buildPptx({ transitions: true, anims: true }); busy(false); await api.debugWriteB64?.({ name: 'export-v5.pptx', b64: ab2b64(buf) }); startShow(3, false, true); return 2600; }
+      case '52-clean-pdf': { endShow(); const p = await api.exportPdfRaster({ html: await buildStandalone(true), name: 'test' }); console.warn('CLEAN-PDF', p); return 600; }
       case '40-ai-dialog': { endShow(); await createFromTemplate(T('saas')); await aiDialog(); await new Promise(r => setTimeout(r, 200)); const ta = $('.aiprompt'); ta.value = 'бузкове поле лаванди на світанку, м’яке світло'; [...document.querySelectorAll('.aimodal .aichip')].find(c => c.textContent === 'Фото')?.click(); [...document.querySelectorAll('.aimodal .btn-primary')].pop().click(); for (let k = 0; k < 150 && document.querySelectorAll('.aicell.loading').length; k++) await new Promise(r => setTimeout(r, 1000)); return 1500; }
       case '39-nightgallery-show': await createFromTemplate(T('nightgallery')); startShow(2, false, true); return 3200;
       case 'home': if (showPlayer) endShow(); await goHome(); return 800;
@@ -1685,7 +1698,7 @@ Object.assign(IC, {
   palette: '<circle cx="12" cy="12" r="9"/><circle cx="8" cy="10" r="1.3" fill="currentColor"/><circle cx="12" cy="7.5" r="1.3" fill="currentColor"/><circle cx="16" cy="10" r="1.3" fill="currentColor"/><path d="M12 21a2 2 0 0 1 0-4h2a3 3 0 0 0 3-3"/>'
 });
 const iconSvg = (name, sw = 1.6) => { const t = document.createElement('template'); t.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round"><path d="${Aurea.ICONS[name]}"/></svg>`; return t.content.firstChild; };
-const ICON_NAMES = { crown: 'Корона', star: 'Зірка', heart: 'Серце', check: 'Галочка', cross: 'Хрестик', arrow: 'Стрілка', quote: 'Цитата', book: 'Книга', globe: 'Глобус', calendar: 'Календар', user: 'Людина', users: 'Люди', bulb: 'Ідея', trophy: 'Кубок', flag: 'Прапор', pin: 'Мітка', clock: 'Годинник', camera: 'Камера', music: 'Музика', rocket: 'Ракета', shield: 'Щит', castle: 'Замок', rose: 'Троянда', sparkle: 'Іскра', chart: 'Графік', target: 'Ціль', leaf: 'Листок', mail: 'Лист', chat: 'Чат', gift: 'Подарунок', mountain: 'Гори', sun: 'Сонце', moon: 'Місяць', play: 'Відтворення', pen: 'Перо', scroll: 'Сувій', gem: 'Діамант' };
+const ICON_NAMES = { home: 'Дім', cap: 'Навчання', flask: 'Колба', cloud: 'Хмара', bolt: 'Блискавка', lock: 'Замок', key: 'Ключ', search: 'Пошук', settings: 'Налаштування', code: 'Код', database: 'База даних', phone: 'Телефон', laptop: 'Ноутбук', cart: 'Кошик', coin: 'Гроші', growth: 'Зростання', pie: 'Кругова діаграма', puzzle: 'Пазл', compass: 'Компас', map: 'Карта', tree: 'Дерево', drop: 'Крапля', fire: 'Вогонь', planet: 'Планета', microscope: 'Мікроскоп', palette: 'Палітра', idea: 'Ідея', handshake: 'Партнерство', medal: 'Медаль', video: 'Відео', crown: 'Корона', star: 'Зірка', heart: 'Серце', check: 'Галочка', cross: 'Хрестик', arrow: 'Стрілка', quote: 'Цитата', book: 'Книга', globe: 'Глобус', calendar: 'Календар', user: 'Людина', users: 'Люди', bulb: 'Ідея', trophy: 'Кубок', flag: 'Прапор', pin: 'Мітка', clock: 'Годинник', camera: 'Камера', music: 'Музика', rocket: 'Ракета', shield: 'Щит', castle: 'Замок', rose: 'Троянда', sparkle: 'Іскра', chart: 'Графік', target: 'Ціль', leaf: 'Листок', mail: 'Лист', chat: 'Чат', gift: 'Подарунок', mountain: 'Гори', sun: 'Сонце', moon: 'Місяць', play: 'Відтворення', pen: 'Перо', scroll: 'Сувій', gem: 'Діамант' };
 
 // ---- ripple on buttons
 document.addEventListener('pointerdown', (e) => {
@@ -2499,6 +2512,12 @@ async function buildPptx(opts) {
         } else if (e.type === 'line') {
           sl.addShape('line', { x: e.x * PX2IN, y: (e.y + e.h / 2) * PX2IN, w: e.w * PX2IN, h: 0, rotate: e.rot || 0, objectName: name,
             line: { color: hexNo(st.stroke), width: Math.max(.25, (st.strokeWidth || 2) * .5), dashType: st.dash ? 'dash' : 'solid', endArrowType: st.ends === 'arrow' ? 'triangle' : undefined, transparency: transp || undefined } });
+        } else if (e.type === 'table') {
+          const rows = (e.rows || [['']]);
+          const lineC = hexNo(st.lineColor || st.color || '#ffffff');
+          sl.addTable(rows.map((r, ri) => r.map(c => ({ text: String(c ?? ''), options: (ri === 0 && st.header !== false) ? { bold: true, color: hexNo(st.headColor || '#ffffff'), fill: { color: hexNo(st.headBg || '#7b6cff') } } : {} }))), {
+            x: e.x * PX2IN, y: e.y * PX2IN, w: e.w * PX2IN, h: e.h * PX2IN, fontFace: st.font || 'Inter', fontSize: (st.size || 24) * .5, color: hexNo(st.color || '#ffffff'), align: st.align || 'left', valign: 'middle',
+            border: { type: 'solid', pt: .75, color: lineC }, margin: Math.max(2, (st.padX ?? 20) * .5), objectName: name });
         } else if (e.type === 'chart') {
           const data = e.data || [];
           const pal = (st.colors && st.colors.length ? st.colors : ['#e8c27a', '#9d8bff', '#6ee7f9', '#f472b6', '#4ade80', '#fb923c']);
@@ -2607,6 +2626,121 @@ async function aiDialog(pt) {
       h('div', { class: 'row', style: 'margin-top:14px' }, h('div', { class: 'spacer' }), h('button', { class: 'btn', onclick: close }, 'Закрити'), go)));
   document.body.append(m);
   setTimeout(() => ta.focus(), 50);
+}
+
+// ---- "Presentation from AI": topic -> outline (free text model) -> animated deck with morph and AI images ----
+const DECK_STYLES = {
+  dark: { name: 'Темний SaaS', bg: { color: '#07070c', grad: 'radial', color2: '#1b1638', cx: 20, cy: 0, fx: 'particles', fxColor: '#9d8bff', fxColor2: '#22d3ee' }, tx: '#ffffff', mu: '#a7a3c2', ac: '#9d8bff', ac2: '#22d3ee', head: 'Manrope', body: 'Inter', card: '#ffffff', cardOp: .06 },
+  light: { name: 'Світлий мінімал', bg: { color: '#f6f5f8', grad: 'radial', color2: '#e6e1fa', cx: 85, cy: 0 }, tx: '#1d1938', mu: '#6b6780', ac: '#6d5cf0', ac2: '#ec4899', head: 'Manrope', body: 'Inter', card: '#1d1938', cardOp: .05 },
+  museum: { name: 'Музейна класика', bg: { color: '#0b0907', grad: 'radial', color2: '#2a1a10', cx: 50, cy: 10, grain: true, vignette: true }, tx: '#efe6d2', mu: '#b9a98a', ac: '#c9a45c', ac2: '#e7cf93', head: 'Playfair Display', body: 'Cormorant Garamond', card: '#c9a45c', cardOp: .08 }
+};
+function buildAiDeck(d, st, imgs) {
+  const { T, S, I, slide } = TPL;
+  const P = DECK_STYLES[st];
+  const assets = {};
+  const img = (key, data) => { if (data) assets[key] = data; return !!data; };
+  const label = (t, x, y, o = {}) => T(t, x, y, 900, 40, { font: P.body, size: 22, weight: 600, color: P.ac, ls: .32, upper: true }, { a: 'fadeUp', d: 100, m: 'label', ...o });
+  const slides = [];
+  // cover
+  const hasCover = img('cover', imgs[0]);
+  slides.push(slide([
+    S('glow', hasCover ? 980 : 520, -160, 1000, 900, { fill: P.ac, fillOpacity: .35, blur: 90 }, { a: 'pulse', m: 'glow' }),
+    ...(hasCover ? [I('cover', 1040, 140, 760, 800, { radius: 36, mask: 'rounded', shadow: true, pos: '50% 50%' }, { a: 'kenburns', d: 200, m: 'img' })] : []),
+    label('Презентація', 140, 300),
+    T(d.title || 'Презентація', 130, 350, hasCover ? 860 : 1600, 330, { font: P.head, size: (d.title || '').length > 24 ? 92 : 120, weight: 700, color: P.tx, color2: P.ac, gradAngle: 180, lh: 1.02, ls: -.03 }, { a: 'maskUp', d: 300, m: 'title' }),
+    T(d.subtitle || '', 140, 700, hasCover ? 820 : 1500, 120, { font: P.body, size: 38, color: P.mu, lh: 1.35 }, { a: 'fadeUp', d: 900, m: 'sub' })
+  ], P.bg, 'fade', 'Привітайтеся й назвіть тему.'));
+  // content slides
+  d.slides.forEach((s, i) => {
+    const key = 'img' + (i + 1), has = img(key, imgs[i + 1]);
+    const bullets = (s.bullets || []).slice(0, 4);
+    const w = has ? 800 : 1600;
+    slides.push(slide([
+      S('glow', has ? -260 : 900, 500, 900, 800, { fill: i % 2 ? P.ac2 : P.ac, fillOpacity: .22, blur: 90 }, { a: 'float', m: 'glow' }),
+      ...(has ? [I(key, 1040, 160, 740, 760, { radius: 32, mask: 'rounded', shadow: true, pos: '50% 50%' }, { a: 'blurIn', d: 250, m: 'img' })] : []),
+      label(String(i + 1).padStart(2, '0') + ' / ' + String(d.slides.length).padStart(2, '0'), 140, 170, { d: 0 }),
+      T(s.title || '', 130, 220, w, 220, { font: P.head, size: (s.title || '').length > 30 ? 62 : 76, weight: 700, color: P.tx, lh: 1.08, ls: -.025 }, { a: 'fadeUp', d: 150, m: 'title' }),
+      ...bullets.flatMap((b, j) => [
+        S('rect', 140, 480 + j * 118, w, 96, { fill: P.card, fillOpacity: P.cardOp, radius: 22, stroke: P.card, strokeOpacity: .1, strokeWidth: 1 }, { a: 'fadeUp', d: 450 + j * 220 }),
+        S('ellipse', 172, 516 + j * 118, 24, 24, { fill: j % 2 ? P.ac2 : P.ac }, { a: 'scaleIn', d: 520 + j * 220 }),
+        T(b, 222, 496 + j * 118, w - 110, 70, { font: P.body, size: 32, color: P.tx, lh: 1.25, valign: 'middle' }, { a: 'fadeUp', d: 560 + j * 220 })
+      ])
+    ], P.bg, 'morph', s.notes || ''));
+  });
+  // finale
+  slides.push(slide([
+    S('glow', 460, 160, 1000, 800, { fill: P.ac, fillOpacity: .35, blur: 100 }, { a: 'pulse', m: 'glow' }),
+    T('Дякую за увагу!', 160, 360, 1600, 220, { font: P.head, size: 150, weight: 700, color: P.tx, color2: P.ac, gradAngle: 180, align: 'center', lh: 1, ls: -.03 }, { a: 'shine', d: 200, m: 'title' }),
+    T('Запитання?', 460, 640, 1000, 80, { font: P.body, size: 46, color: P.mu, align: 'center' }, { a: 'typewriter', d: 900, ax: { dur: 900 }, m: 'sub' })
+  ], P.bg, 'circle', 'Подякуйте й запросіть до запитань.', { confetti: true, confettiColors: [P.ac, P.ac2, '#ffffff'] }));
+  return { format: 'aurea', version: 1, title: d.title || 'Презентація ШІ', theme: { name: 'ai-' + st, colors: [P.bg.color, P.ac, P.ac2, P.tx, P.mu, '#ffffff'] }, slides, assets };
+}
+async function aiDeckDialog() {
+  finishEdit();
+  let count = 5, style = 'dark', withImages = true;
+  const cfg = await api.aiSettings?.() || { provider: 'free', hasKey: false };
+  let textAi = cfg.hasKey ? 'gemini' : 'free';
+  const close = () => { if (!running) m.remove(); };
+  let running = false;
+  const inp = h('input', { class: 'inp aitopic', placeholder: 'Тема, наприклад: Фотосинтез, Козацтво, Сонячна система…', maxlength: 200 });
+  const chips = (list, get, set) => h('div', { class: 'aichips' }, ...list.map(([v, l]) => { const b = h('button', { class: 'aichip' + (get() === v ? ' on' : ''), onclick: () => { set(v); b.parentElement.querySelectorAll('.aichip').forEach(x => x.classList.toggle('on', x === b)); } }, l); return b; }));
+  const keyInp = h('input', { class: 'inp', type: 'password', placeholder: cfg.hasKey ? 'Ключ Gemini збережено на цьому комп’ютері ✓' : 'Вставте ключ Gemini API', onchange: async (e) => { const v = e.target.value.trim(); if (v) { await api.aiSettings({ geminiKey: v, provider: 'gemini' }); e.target.value = ''; e.target.placeholder = 'Ключ Gemini збережено на цьому комп’ютері ✓'; toast('Ключ Gemini збережено'); } } });
+  const keyRow = h('div', { class: 'airow', style: textAi === 'gemini' ? '' : 'display:none' }, h('span', { class: 'lbl' }, ''), keyInp,
+    h('button', { class: 'btn', onclick: () => api.openLink?.('https://aistudio.google.com/apikey'), title: 'Безкоштовно, потрібен лише акаунт Google' }, 'Отримати ключ'));
+  const steps = h('div', { class: 'aisteps' });
+  const step = (t) => { const r = h('div', { class: 'aistep run' }, h('i'), h('span', {}, t)); steps.append(r); return { ok: (x) => { r.className = 'aistep ok'; if (x) r.lastChild.textContent = x; }, fail: (x) => { r.className = 'aistep fail'; if (x) r.lastChild.textContent = x; } }; };
+  const go = h('button', { class: 'btn-primary', onclick: () => run() }, icon('sparkle2'), 'Створити презентацію');
+  async function run() {
+    const topic = inp.value.trim(); if (!topic) { inp.focus(); return; }
+    running = true; go.disabled = true; steps.replaceChildren();
+    try {
+      const s1 = step(textAi === 'gemini' ? 'Gemini пише план і тексти слайдів…' : 'ШІ пише план і тексти слайдів…');
+      if (textAi === 'gemini' && !(await api.aiSettings()).hasKey) throw new Error('Вставте ключ Gemini або виберіть безкоштовну модель без ключа');
+      const d = await api.aiOutline({ topic, count, provider: textAi });
+      d.slides = (d.slides || []).filter(s => s && s.title).slice(0, count);
+      if (!d.slides.length) throw new Error('ШІ не повернув слайдів');
+      s1.ok(`План готовий: «${d.title || topic}», ${d.slides.length} сл.`);
+      const imgs = [];
+      if (withImages) {
+        const prompts = [d.cover || (d.slides[0] && d.slides[0].image) || `${topic}, cinematic photo`, ...d.slides.map(s => s.image || s.title)];
+        for (let i = 0; i < prompts.length; i++) {
+          const si = step(`Малюю зображення ${i + 1} з ${prompts.length}…`);
+          let data = null;
+          if (i) await new Promise(r => setTimeout(r, 9000)); // the free image service accepts about one request per ~10 s
+          for (let k = 0; k < 4 && !data; k++) {
+            try { data = (await api.aiImage({ prompt: prompts[i] + ', high quality photo, no text', ratio: '1:1', provider: 'free' })).data; }
+            catch (err) { if (/HTTP (402|429|5\d\d)/.test(String(err.message)) && k < 3) await new Promise(r => setTimeout(r, 10000 * (k + 1))); else break; }
+          }
+          if (data) { imgs[i] = await shrinkImage(data, 1200); si.ok(`Зображення ${i + 1} з ${prompts.length} готове`); }
+          else si.fail(`Зображення ${i + 1} пропущено (сервіс зайнятий)`);
+        }
+      }
+      const s3 = step('Збираю слайди, анімації та morph-переходи…');
+      const proj = buildAiDeck(d, style, imgs);
+      running = false; m.remove();
+      loadProject(proj, null);
+      toast('Презентацію створено ШІ — натисніть «Показ», щоб подивитися');
+      s3.ok();
+    } catch (err) {
+      step(String(err.message || err).replace(/^Error invoking remote method '[^']+': (Error: )?/, '')).fail();
+      running = false; go.disabled = false;
+    }
+  }
+  inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') run(); });
+  const m = h('div', { class: 'modal-bg', onclick: (e) => { if (e.target === m) close(); } },
+    h('div', { class: 'modal glass aimodal', style: 'width:min(720px,94vw)' },
+      h('h2', {}, 'Презентація з ШІ'),
+      h('p', { class: 'hint', style: 'margin:-6px 0 12px' }, 'Напишіть тему — ШІ складе план, тексти, нотатки доповідача й намалює зображення. Безкоштовно, без ключа. Перевірте тексти перед показом; з ключем Gemini (вікно «Згенерувати зображення ШІ») вони значно якісніші.'),
+      inp,
+      h('div', { class: 'airow' }, h('span', { class: 'lbl' }, 'Слайдів'), chips([[4, '4'], [5, '5'], [6, '6'], [8, '8']], () => count, v => { count = v; })),
+      h('div', { class: 'airow' }, h('span', { class: 'lbl' }, 'Стиль'), chips(Object.entries(DECK_STYLES).map(([k, v]) => [k, v.name]), () => style, v => { style = v; })),
+      h('div', { class: 'airow' }, h('span', { class: 'lbl' }, 'Текст ШІ'), chips([['gemini', 'Gemini — розумніший (безкоштовний ключ)'], ['free', 'Простий, без ключа']], () => textAi, v => { textAi = v; keyRow.style.display = v === 'gemini' ? '' : 'none'; })),
+      keyRow,
+      h('div', { class: 'airow' }, h('span', { class: 'lbl' }, 'Картинки'), chips([[true, 'Згенерувати ШІ'], [false, 'Без картинок (швидко)']], () => withImages, v => { withImages = v; })),
+      steps,
+      h('div', { class: 'row', style: 'margin-top:14px' }, h('span', { class: 'hint' }, 'З картинками — 1–2 хвилини, без них — до 30 секунд'), h('div', { class: 'spacer' }), h('button', { class: 'btn', onclick: close }, 'Закрити'), go)));
+  document.body.append(m);
+  setTimeout(() => inp.focus(), 50);
 }
 
 function exportPptxDialog() {
@@ -2750,7 +2884,7 @@ const COMMANDS = () => [
   ['Експорт у формат .pptx…', 'Ctrl+Shift+E', exportPptxDialog], ['Експорт у PDF', 'Ctrl+P', exportPdf], ['Експорт у HTML', '', exportHtml],
   ['Показ з початку', 'F5', () => startShow(0)], ['Показ з поточного слайда', 'Shift+F5', () => startShow(cur)], ['Панель доповідача', 'Alt+F5', () => startPresenterMode()], ['Режим читання', '', readingView],
   ['Текст', 'T', () => addText('body')], ['Заголовок', '', () => addText('title')], ['Прямокутник', 'R', () => addShape('rect')], ['Еліпс', 'O', () => addShape('ellipse')], ['Лінія', 'L', addLine], ['Зображення з комп’ютера', 'I', () => pickImage()],
-  ['Згенерувати зображення ШІ', 'Ctrl+Shift+I', () => aiDialog()], ['Пошук фото з вільною ліцензією', 'Shift+I', () => imageSearch()], ['Іконка', '', () => iconMenu($('[data-act="menu-icon"]'))], ['Діаграма-стовпці', '', () => addChart('bar')], ['Кільцева діаграма', '', () => addChart('donut')],
+  ['Презентація з ШІ (план, тексти, картинки)', 'Ctrl+Shift+G', () => aiDeckDialog()], ['Згенерувати зображення ШІ', 'Ctrl+Shift+I', () => aiDialog()], ['Пошук фото з вільною ліцензією', 'Shift+I', () => imageSearch()], ['Іконка', '', () => iconMenu($('[data-act="menu-icon"]'))], ['Діаграма-стовпці', '', () => addChart('bar')], ['Кільцева діаграма', '', () => addChart('donut')],
   ['Копіювати', 'Ctrl+C', copySel], ['Вирізати', 'Ctrl+X', cutSel], ['Вставити', 'Ctrl+V', paste], ['Вставити як простий текст', 'Ctrl+Alt+V', pastePlain], ['Дублювати', 'Ctrl+D', duplicateSel], ['Видалити', 'Delete', deleteSel],
   ['Скасувати', 'Ctrl+Z', undo], ['Повторити', 'Ctrl+Y', redo], ['Виділити все', 'Ctrl+A', () => { sel = slideCur().elements.filter(x => !x.locked && !x.hidden).map(x => x.id); renderOverlay(); renderProps(); }],
   ['Групувати', 'Ctrl+G', groupSel], ['Розгрупувати', 'Ctrl+Shift+G', ungroupSel], ['На передній план', 'Ctrl+Shift+]', () => layer('top')], ['На задній план', 'Ctrl+Shift+[', () => layer('bottom')],
@@ -2768,7 +2902,8 @@ const COMMANDS = () => [
   ['Масштаб: вмістити', 'Ctrl+0', () => ACTIONS.zoomfit()], ['Збільшити', 'Ctrl+=', () => ACTIONS.zoomin()], ['Зменшити', 'Ctrl+-', () => ACTIONS.zoomout()],
   ['Переглянути анімації слайда', 'Ctrl+Shift+Enter', () => previewAnims()], ['Світла / темна тема', 'Ctrl+Shift+T', () => applyTheme(getTheme() === 'light' ? 'dark' : 'light', true)],
   ['Наступний об’єкт', 'Tab', () => cycleSelection(false)], ['Попередній об’єкт', 'Shift+Tab', () => cycleSelection(true)],
-  ['Гарячі клавіші', 'Ctrl+/', () => showKeys()], ['Головний екран', '', goHome]
+  ['Гарячі клавіші', 'Ctrl+/', () => showKeys()], ['Головний екран', '', goHome],
+  ...(typeof window.EXTRA_CMDS === 'function' ? window.EXTRA_CMDS() : [])
 ];
 function commandPalette() {
   if (!P || $('#editor').classList.contains('hidden')) return;
@@ -2837,6 +2972,7 @@ addEventListener('keydown', (e) => {
   else if (ctrl && !e.shiftKey && code === 'KeyB') fn = () => toggleTextStyle('weight');
   else if (ctrl && !e.shiftKey && code === 'KeyI') fn = () => toggleTextStyle('italic');
   else if (ctrl && e.shiftKey && code === 'KeyI') fn = () => aiDialog();
+  else if (ctrl && e.shiftKey && code === 'KeyG') fn = () => aiDeckDialog();
   else if (ctrl && !e.shiftKey && code === 'KeyU') fn = () => toggleTextStyle('underline');
   else if (ctrl && e.shiftKey && code === 'BracketRight') fn = () => layer('top');
   else if (ctrl && e.shiftKey && code === 'BracketLeft') fn = () => layer('bottom');
