@@ -892,3 +892,88 @@ html[data-theme=light]{
 :root:not([data-theme=light]) .d-shine i{background:linear-gradient(100deg,#8a8798 40%,#fff 50%,#8a8798 60%)!important;background-size:300% 100%!important}
 :root:not([data-theme=light]) .d-highlight i{background:linear-gradient(90deg,#b9b6c8 50%,rgb(255 255 255 / .1) 50%)!important;background-size:200% 100%!important}
 :root:not([data-theme=light]) .aichips .aichip.on{background:#ededf0;border-color:#ededf0;color:#0b0b0d}
+
+/* ================= v8: quiet light theme (pairs with v7 dark) ================= */
+html[data-theme=light]{
+  --ink:17 17 22; --surf:255 255 255; --shade:20 20 30; --sk:.35;
+  --app-bg:#f5f5f6; --surface-solid:#ffffff; --panel-solid:#ffffff;
+  --panel:#ffffff; --panel-2:rgb(17 17 22 / .03); --panel-3:rgb(17 17 22 / .05);
+  --line:rgb(17 17 22 / .08); --line-2:rgb(17 17 22 / .12); --line-3:rgb(17 17 22 / .2);
+  --tx:#17171c; --tx-strong:#0b0b0d; --tx-2:#4a4a54; --mu:#6b6b76;
+  --ac:#5b50e0; --ac-2:#5b50e0; --ac-3:#5b50e0;
+  --sel:#5b50e0; --sel-tx:#4338ca; --sel-soft:rgba(91,80,224,.1);
+  --acg:#17171c; --acg-soft:rgb(17 17 22 / .05); --on-acc:#ffffff;
+  --hero-grad:none; --aura-op:0; --aura-bg:#f5f5f6;
+  --input:#ffffff; --menu-bg:#ffffff; --canvas-bg:#ececee; --dots:rgb(17 17 22 / .07);
+  --splash-bg:#f5f5f6;
+  --sh:0 12px 32px rgba(20,20,30,.08),0 1px 2px rgba(20,20,30,.06);
+}
+html[data-theme=light] ::selection{background:rgba(91,80,224,.2)}
+html[data-theme=light] :focus-visible{outline:1.5px solid #5b50e0;outline-offset:2px}
+html[data-theme=light] ::-webkit-scrollbar-thumb{background:rgb(17 17 22 / .14);background-clip:padding-box}
+html[data-theme=light] .aura{display:none}
+html[data-theme=light] body,html[data-theme=light] #start{background:#f5f5f6}
+html[data-theme=light] #topbar{background:#ffffff!important;border-bottom:1px solid rgb(17 17 22 / .07)}
+html[data-theme=light] #topbar::after{display:none}
+html[data-theme=light] .glass,html[data-theme=light] .toast,html[data-theme=light] #statusbar,html[data-theme=light] .qbar,html[data-theme=light] .menu{backdrop-filter:none;-webkit-backdrop-filter:none}
+html[data-theme=light] .glass{background:#ffffff;border-color:rgb(17 17 22 / .08);box-shadow:0 1px 2px rgba(20,20,30,.04)}
+html[data-theme=light] .panel,html[data-theme=light] #work{border:1px solid rgb(17 17 22 / .08)}
+html[data-theme=light] #viewport{box-shadow:0 18px 44px rgba(20,20,30,.14),0 0 0 1px rgb(17 17 22 / .06)}
+html[data-theme=light] .toast,html[data-theme=light] #statusbar,html[data-theme=light] .qbar{background:#ffffff;border-color:rgb(17 17 22 / .1);box-shadow:0 10px 28px rgba(20,20,30,.1)}
+html[data-theme=light] .modal{background:#ffffff;border:1px solid rgb(17 17 22 / .08)}
+html[data-theme=light] .modal-bg{backdrop-filter:none;background:rgba(20,20,30,.3)}
+html[data-theme=light] .logo .mark{background:#17171c;border-color:transparent;box-shadow:none}
+html[data-theme=light] .logo .mark svg{stroke:#ffffff}
+html[data-theme=light] .logo b{background:none;-webkit-background-clip:border-box;background-clip:border-box;color:#0b0b0d;animation:none;font-weight:600}
+html[data-theme=light] .hero h1{background:none!important;-webkit-background-clip:border-box;background-clip:border-box;color:#0b0b0d;font-weight:700}
+html[data-theme=light] #splash .sp-name{background:none;-webkit-background-clip:border-box;color:#0b0b0d;animation:spname .8s .5s var(--ease) forwards}
+html[data-theme=light] #splash .sp-mark svg{stroke:#17171c;filter:none}
+html[data-theme=light] .btn{background:#ffffff;border-color:rgb(17 17 22 / .12);color:#17171c}
+html[data-theme=light] .btn:hover{background:#f0f0f2;border-color:rgb(17 17 22 / .18)}
+html[data-theme=light] .btn-primary{background:#17171c;color:#ffffff;border-color:transparent;box-shadow:none;text-shadow:none;transition:background-color .2s var(--ease)}
+html[data-theme=light] .btn-primary:hover{background:#000000;box-shadow:none}
+html[data-theme=light] .btn-primary svg{color:#ffffff}
+html[data-theme=light] .ai-cta,html[data-theme=light] .btn.ai-cta{background:#ffffff!important;border-color:rgb(17 17 22 / .12)!important}
+html[data-theme=light] .ai-cta svg{color:#5b50e0}
+html[data-theme=light] .acard.on{background:rgba(91,80,224,.07)!important;border-color:#5b50e0;box-shadow:none}
+html[data-theme=light] .seg button.on{background:#ffffff!important;box-shadow:0 1px 2px rgba(20,20,30,.12)}
+html[data-theme=light] .tab.on{color:#0b0b0d}
+html[data-theme=light] .tab-ind,html[data-theme=light] .tabs .tab-ind{background:#ffffff;box-shadow:0 1px 2px rgba(20,20,30,.1),inset 0 0 0 1px rgb(17 17 22 / .08)}
+html[data-theme=light] .sitem.cur .tw{outline:1.5px solid #5b50e0;box-shadow:0 6px 16px rgba(20,20,30,.12)}
+html[data-theme=light] .sitem.drop-before::before,html[data-theme=light] .sitem.drop-after::after{box-shadow:none}
+html[data-theme=light] .tcard2,html[data-theme=light] .ritem{background:#ffffff;border:1px solid rgb(17 17 22 / .08)}
+html[data-theme=light] .ritem:hover{background:#fafafb}
+html[data-theme=light] .tcard2:hover{border-color:rgb(17 17 22 / .16);box-shadow:0 16px 36px rgba(20,20,30,.1)}
+html[data-theme=light] .sbox{box-shadow:0 0 0 1px rgba(255,255,255,.7)}
+html[data-theme=light] .sbox::before{display:none}
+html[data-theme=light] input[type=range]::-webkit-slider-thumb{box-shadow:0 1px 3px rgba(20,20,30,.3)}
+html[data-theme=light] .inp{background:#ffffff;border-color:rgb(17 17 22 / .12)}
+html[data-theme=light] .inp:focus{border-color:#5b50e0;box-shadow:0 0 0 3px rgba(91,80,224,.12)}
+html[data-theme=light] .theme-toggle{background:#f0f0f2;border-color:rgb(17 17 22 / .1)}
+html[data-theme=light] .theme-toggle i{background:#17171c;box-shadow:0 1px 3px rgba(20,20,30,.3)}
+html[data-theme=light] .sec h4::before{display:none}
+html[data-theme=light] .sec h4,html[data-theme=light] .phead,html[data-theme=light] .agroup,html[data-theme=light] .menu .mlabel{text-transform:none;letter-spacing:0;font-size:12px;font-weight:600;color:#6b6b76}
+html[data-theme=light] .shead h3{text-transform:none;letter-spacing:-.01em;font-size:16px;font-weight:600;color:#0b0b0d}
+html[data-theme=light] .acard .demo i,html[data-theme=light] .tcard .demo i{background:#3f3f48}
+html[data-theme=light] .d-counter{color:#17171c}
+html[data-theme=light] .d-shine i{background:linear-gradient(100deg,#3f3f48 40%,#c9c9d2 50%,#3f3f48 60%)!important;background-size:300% 100%!important}
+html[data-theme=light] .d-highlight i{background:linear-gradient(90deg,#3f3f48 50%,rgb(17 17 22 / .1) 50%)!important;background-size:200% 100%!important}
+html[data-theme=light] .aichips .aichip.on{background:#17171c;border-color:#17171c;color:#fff}
+html[data-theme=light] #overview{background:rgba(245,245,246,.97)}
+html[data-theme=light] .rip{background:rgba(17,17,22,.1)}
+
+/* ================= v8: motion polish (both themes) ================= */
+:root{--ease:cubic-bezier(.16,1,.3,1)}
+.sitem .tw{transition:outline-color .25s,box-shadow .3s,transform .3s var(--ease)}
+.sitem:hover .tw{transform:translateY(-1px)}
+.btn:active,.btn-primary:active,.tbtn:active,.vbtn:active,.qbar button:active,.acard:active{transform:scale(.97);transition-duration:.08s}
+.tcard2{transition:transform .45s var(--ease),border-color .25s,box-shadow .45s var(--ease)}
+.tcard2:hover{transform:translateY(-3px)}
+/* new animation tiles */
+.d-reveal i{width:55%;height:16px!important;border-radius:4px!important;animation-name:dReveal}
+@keyframes dReveal{0%,15%{clip-path:inset(100% 0 0 0);transform:translateY(8px)}55%,100%{clip-path:inset(0 0 0 0);transform:none}}
+.d-focus i{width:40%;animation-name:dFocus}
+@keyframes dFocus{0%,15%{opacity:0;width:80%;filter:blur(4px)}60%,100%{opacity:1;width:40%;filter:none}}
+@media (prefers-reduced-motion:reduce){
+  #topbar *,#strip *,#props *,#statusbar *,#start *,.menu,.modal,.toast{animation-duration:.01ms!important;transition-duration:.01ms!important}
+}

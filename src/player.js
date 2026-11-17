@@ -546,8 +546,8 @@
   // custom curve from the Bezier editor: a.ease === 'custom', a.bez = [x1, y1, x2, y2]
   const easeOf = (a, d) => (a && a.ease === 'custom' && Array.isArray(a.bez) && a.bez.length === 4) ? `cubic-bezier(${a.bez.map(v => +(+v).toFixed(3)).join(',')})` : ((a && EASES[a.ease]) || d);
   const EASES = {
-    smooth: 'cubic-bezier(.2,.75,.2,1)',
-    spring: 'cubic-bezier(.34,1.5,.5,1)',
+    smooth: 'cubic-bezier(.16,1,.3,1)',
+    spring: 'cubic-bezier(.34,1.32,.5,1)',
     bounce: 'linear(0, .36 9%, .66 18%, .9 27%, 1 33%, .94 40%, .92 43%, .94 47%, 1 55%, .985 63%, 1 72%, .997 85%, 1)',
     sharp: 'cubic-bezier(.7,0,.2,1)',
     linear: 'linear'
@@ -556,7 +556,7 @@
   const ANIMS = {
     none: 'Без анімації',
     fadeUp: 'Fade-up + blur', scaleIn: 'Scale-in', blurIn: 'Розмиття', slideLeft: 'Виїзд', flipIn: '3D-переворот',
-    bounceIn: 'Пружина', rotateIn: 'Поворот', zoomOut: 'Наближення', wipeDown: 'Шторка',
+    bounceIn: 'Пружина', rotateIn: 'Поворот', zoomOut: 'Наближення', wipeDown: 'Шторка', reveal: 'Розкриття', focus: 'Фокус',
     stagger: 'По черзі (слова)', lines: 'По рядках', letters: 'По буквах', maskUp: 'Підйом з маски', typewriter: 'Друкарська машинка',
     shine: 'Shine', highlight: 'Маркер', counter: 'Лічильник',
     draw: 'Малювання', grow: 'Ріст (діаграми)', kenburns: 'Ken Burns',
@@ -566,8 +566,8 @@
     scatter: 'Збір букв', wave: 'Хвиля букв', heartbeat: 'Серцебиття', hue: 'Веселка'
   };
   const ANIM_GROUPS = [
-    ['Поява', ['none', 'fadeUp', 'scaleIn', 'blurIn', 'slideLeft', 'flipIn', 'bounceIn', 'rotateIn', 'zoomOut', 'wipeDown', 'swing', 'elastic', 'spotlight', 'glitch', 'flicker', 'rollIn', 'unfold', 'drop', 'tilt3D']],
-    ['Текст', ['stagger', 'lines', 'letters', 'scatter', 'maskUp', 'typewriter', 'shine', 'highlight', 'counter']],
+    ['Поява', ['none', 'fadeUp', 'reveal', 'scaleIn', 'blurIn', 'slideLeft', 'flipIn', 'bounceIn', 'rotateIn', 'zoomOut', 'wipeDown', 'swing', 'elastic', 'spotlight', 'glitch', 'flicker', 'rollIn', 'unfold', 'drop', 'tilt3D']],
+    ['Текст', ['stagger', 'lines', 'focus', 'letters', 'scatter', 'maskUp', 'typewriter', 'shine', 'highlight', 'counter']],
     ['Графіка', ['draw', 'grow', 'kenburns']],
     ['Постійні', ['float', 'pulse', 'glow', 'wiggle', 'spin', 'wave', 'heartbeat', 'hue']]
   ];
@@ -641,22 +641,36 @@
     const ease = easeOf(a, EASE);
     const K = (frames, x = {}) => inn.animate(frames, { duration: dur, delay, easing: ease, fill: 'backwards', ...x });
     const fade = (d = 500) => inn.animate([{ opacity: 0 }, { opacity: 1 }], { duration: d, delay, fill: 'backwards' });
-    const fadeUp = () => K([{ opacity: 0, transform: 'translateY(60px)', filter: 'blur(16px)' }, { opacity: 1, transform: 'none', filter: 'blur(0px)' }]);
+    const fadeUp = () => K([{ opacity: 0, transform: 'translateY(36px)', filter: 'blur(8px)' }, { opacity: 1, transform: 'none', filter: 'blur(0px)' }]);
     const t = n.querySelector('.a-txt');
     const plainText = t && !t.classList.contains('grad');
     const loop = (frames, opts) => inn.animate(frames, { delay: delay + 500, iterations: Infinity, ...opts });
     switch (type) {
       case 'fadeUp': fadeUp(); break;
-      case 'scaleIn': K([{ opacity: 0, transform: 'scale(.78)', filter: 'blur(10px)' }, { opacity: 1, transform: 'none', filter: 'blur(0px)' }], { easing: easeOf(a, EASES.spring) }); break;
-      case 'blurIn': K([{ opacity: 0, transform: 'scale(1.08)', filter: 'blur(36px)' }, { opacity: 1, transform: 'none', filter: 'blur(0px)' }], { duration: dur * 1.2 }); break;
+      case 'scaleIn': K([{ opacity: 0, transform: 'scale(.88)', filter: 'blur(6px)' }, { opacity: 1, transform: 'none', filter: 'blur(0px)' }], { easing: easeOf(a, EASES.spring) }); break;
+      case 'blurIn': K([{ opacity: 0, transform: 'scale(1.05)', filter: 'blur(20px)' }, { opacity: 1, transform: 'none', filter: 'blur(0px)' }], { duration: dur * 1.2 }); break;
       case 'slideLeft': {
-        const d = { left: 'translateX(-160px)', right: 'translateX(160px)', up: 'translateY(140px)', down: 'translateY(-140px)' }[a.dir || 'left'];
-        K([{ opacity: 0, transform: d, filter: 'blur(6px)' }, { opacity: 1, transform: 'none', filter: 'blur(0px)' }]); break;
+        const d = { left: 'translateX(-110px)', right: 'translateX(110px)', up: 'translateY(90px)', down: 'translateY(-90px)' }[a.dir || 'left'];
+        K([{ opacity: 0, transform: d, filter: 'blur(4px)' }, { opacity: 1, transform: 'none', filter: 'blur(0px)' }]); break;
       }
       case 'flipIn': inn.style.transformOrigin = '50% 0%'; K([{ opacity: 0, transform: 'perspective(1400px) rotateX(-75deg) translateY(-20px)' }, { opacity: 1, transform: 'perspective(1400px) rotateX(0deg)' }], { duration: dur * 1.15 }); break;
       case 'bounceIn': K([{ opacity: 0, transform: 'scale(.3)' }, { opacity: 1, transform: 'scale(1)', offset: .35 }, { transform: 'scale(1)' }], { easing: easeOf(a, EASES.bounce), duration: dur * 1.4 }); break;
-      case 'rotateIn': K([{ opacity: 0, transform: 'rotate(-14deg) scale(.82) translateY(50px)', filter: 'blur(8px)' }, { opacity: 1, transform: 'none', filter: 'blur(0px)' }], { easing: easeOf(a, EASES.spring) }); break;
-      case 'zoomOut': K([{ opacity: 0, transform: 'scale(1.7)', filter: 'blur(24px)' }, { opacity: 1, transform: 'none', filter: 'blur(0px)' }], { duration: dur * 1.2 }); break;
+      case 'rotateIn': K([{ opacity: 0, transform: 'rotate(-8deg) scale(.9) translateY(30px)', filter: 'blur(6px)' }, { opacity: 1, transform: 'none', filter: 'blur(0px)' }], { easing: easeOf(a, EASES.spring) }); break;
+      case 'zoomOut': K([{ opacity: 0, transform: 'scale(1.3)', filter: 'blur(12px)' }, { opacity: 1, transform: 'none', filter: 'blur(0px)' }], { duration: dur * 1.2 }); break;
+      case 'reveal': {
+        // editorial reveal: the block rises out of its own clipped box
+        K([{ clipPath: 'inset(100% 0 0 0)', transform: 'translateY(40px)' }, { clipPath: 'inset(0% 0 0 0)', transform: 'none' }], { duration: dur * 1.1, easing: easeOf(a, 'cubic-bezier(.77,0,.18,1)') });
+        break;
+      }
+      case 'focus': {
+        // cinematic title: letters gather from wide tracking while coming into focus
+        if (t && plainText) {
+          const ls = getComputedStyle(t).letterSpacing; const base = ls === 'normal' ? '0px' : ls;
+          t.animate([{ letterSpacing: '.35em' }, { letterSpacing: base }], { duration: dur * 1.6, delay, easing: easeOf(a, EASE), fill: 'backwards' });
+        }
+        K([{ opacity: 0, filter: 'blur(14px)' }, { opacity: 1, filter: 'blur(0px)' }], { duration: dur * 1.2 });
+        break;
+      }
       case 'wipeDown': K([{ clipPath: 'inset(0 0 100% 0)' }, { clipPath: 'inset(0 0 0% 0)' }], { duration: dur * 1.2, easing: easeOf(a, EASES.sharp) }); break;
       case 'lines': {
         if (!plainText) { fadeUp(); break; }
@@ -713,7 +727,7 @@
         break;
       }
       case 'counter': {
-        K([{ opacity: 0, transform: 'translateY(30px)', filter: 'blur(10px)' }, { opacity: 1, transform: 'none', filter: 'blur(0px)' }], { duration: 600 });
+        K([{ opacity: 0, transform: 'translateY(20px)', filter: 'blur(6px)' }, { opacity: 1, transform: 'none', filter: 'blur(0px)' }], { duration: 600 });
         if (t) countUp(t, el.content, delay, a.dur && a.dur > 900 ? a.dur : 2200);
         break;
       }
