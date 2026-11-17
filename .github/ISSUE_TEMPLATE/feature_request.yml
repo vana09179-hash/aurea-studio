@@ -1,0 +1,11 @@
+name: Ідея
+description: Запропонувати нову функцію
+labels: [enhancement]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: Що б ви хотіли?
+      description: Опишіть задачу, яку це вирішить, а не лише саму кнопку.
+    validations:
+      required: true

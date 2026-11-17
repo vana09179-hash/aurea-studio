@@ -70,7 +70,8 @@
       "icon": "build/icon.png",
       "artifactName": "AureaStudio-${version}-mac-${arch}.${ext}",
       "identity": null
-    }
+    },
+    "afterPack": "build/after-pack.js"
   },
   "devDependencies": {
     "@fontsource-variable/alegreya": "^5.3.0",

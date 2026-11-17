@@ -1,0 +1,35 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['site/**', '*.md']
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: System packages (virtual display, LibreOffice for .pptx check)
+        run: sudo apt-get update && sudo apt-get install -y xvfb libreoffice-impress --no-install-recommends
+      - name: Run every editor scenario (AI steps need network, skipped)
+        run: xvfb-run -a -s "-screen 0 1920x1080x24" npx electron . --no-sandbox --shots=out --skip=40,41,42
+      - name: Check errors, screenshots and exported files
+        run: python3 tools/check-run.py out
+      - name: Open exported .pptx in LibreOffice
+        run: |
+          soffice --headless --convert-to pdf --outdir out out/export-test.pptx
+          test -s out/export-test.pdf
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-run
+          path: out

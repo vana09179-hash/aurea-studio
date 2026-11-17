@@ -68,7 +68,12 @@ function createWindow() {
   win.webContents.on('did-fail-load', (...a) => LOG('fail', a.slice(1, 4)));
   win.webContents.on('did-finish-load', () => LOG('loaded'));
   win.webContents.on('console-message', (_e, l, m) => LOG('console', m));
-  win.webContents.on('render-process-gone', (_e, d) => LOG('gone', JSON.stringify(d)));
+  win.webContents.on('render-process-gone', (_e, d) => {
+    LOG('gone', JSON.stringify(d));
+    // the editor autosaves every change, so after a crash reload and offer the saved copy
+    if (d.reason !== 'clean-exit' && !SHOTS_DIR && crashCount++ < 3) { crashedOnce = true; setTimeout(() => win && !win.isDestroyed() && win.reload(), 400); }
+  });
+  win.on('unresponsive', () => LOG('unresponsive'));
   win.loadURL('app://local/index.html');
   let shown = false;
   const reveal = () => { if (shown || !win) return; shown = true; LOG('show'); win.show(); if (SHOTS_DIR) runShots(); };
@@ -276,9 +281,11 @@ ipcMain.handle('net:image', async (_e, url) => {
 const aiFile = () => path.join(userDir(), 'ai.json');
 const readAi = () => { try { return JSON.parse(fs.readFileSync(aiFile(), 'utf8')); } catch { return {}; } };
 // open a small allowlist of help links in the user's browser
+let crashedOnce = false, crashCount = 0;
+ipcMain.handle('app:crashed', () => { const v = crashedOnce; crashedOnce = false; return v; });
 ipcMain.handle('open:link', async (_e, url) => {
   const u = new URL(url);
-  if (u.protocol === 'https:' && ['aistudio.google.com', 'vana09179-hash.github.io'].includes(u.hostname)) await shell.openExternal(u.href);
+  if (u.protocol === 'https:' && ['aistudio.google.com', 'vana09179-hash.github.io', 'fonts.google.com'].includes(u.hostname)) await shell.openExternal(u.href);
 });
 ipcMain.handle('ai:settings', async (_e, patch) => {
   const cur = readAi();
@@ -654,6 +661,9 @@ async function runShots() {
     const onlyArg = argv.find(a => a.startsWith('--only='));
     let steps = await js('window.__demo ? window.__demo.steps() : []');
     if (onlyArg) { const only = onlyArg.slice(7).split(','); steps = steps.filter(s => only.some(o => s.startsWith(o))); }
+    const skipArg = argv.find(a => a.startsWith('--skip='));
+    if (skipArg) { const skip = skipArg.slice(7).split(','); steps = steps.filter(s => !skip.some(o => s.startsWith(o))); }
+    fs.writeFileSync(path.join(SHOTS_DIR, 'steps.json'), JSON.stringify(steps));
     for (const s of steps) {
       const delay = await js(`window.__demo.run(${JSON.stringify(s)})`);
       await wait(delay || 1200);

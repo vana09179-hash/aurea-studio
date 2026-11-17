@@ -34,6 +34,7 @@ contextBridge.exposeInMainWorld('aurea', {
   aiImage: (o) => ipcRenderer.invoke('ai:image', o),
   aiOutline: (o) => ipcRenderer.invoke('ai:outline', o),
   openLink: (u) => ipcRenderer.invoke('open:link', u),
+  wasCrashed: () => ipcRenderer.invoke('app:crashed'),
   exportPdfRaster: (o) => ipcRenderer.invoke('export:pdfRaster', o),
   histSave: (o) => ipcRenderer.invoke('hist:save', o),
   histList: (k) => ipcRenderer.invoke('hist:list', k),

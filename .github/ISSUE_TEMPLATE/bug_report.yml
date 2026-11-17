@@ -1,0 +1,30 @@
+name: Помилка
+description: Щось працює не так
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: Що сталося?
+      description: Що ви робили, що очікували побачити і що побачили натомість.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Версія програми
+      placeholder: "1.2.1"
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Система
+      options: [Windows, macOS (Apple Silicon), macOS (Intel), Linux, Chromebook]
+    validations:
+      required: true
+  - type: textarea
+    id: files
+    attributes:
+      label: Скріншот або файл
+      description: Перетягніть сюди скріншот або файл .aurea, якщо можна.

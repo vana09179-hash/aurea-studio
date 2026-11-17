@@ -1,8 +1,13 @@
 /* Aurea Studio — editor */
 'use strict';
 window.__errors = [];
-addEventListener('error', e => window.__errors.push(String(e.message) + ' @' + (e.filename || '').split('/').pop() + ':' + e.lineno));
+// "ResizeObserver loop completed" is a harmless browser notice, not an error
+addEventListener('error', e => { if (/ResizeObserver loop/.test(e.message)) return; window.__errors.push(String(e.message) + ' @' + (e.filename || '').split('/').pop() + ':' + e.lineno); });
 addEventListener('unhandledrejection', e => window.__errors.push('rej: ' + String(e.reason && (e.reason.stack || e.reason))));
+// any unexpected error: save the work right away so nothing is lost
+let errSaveT = 0;
+const saveOnError = () => { if (Date.now() - errSaveT < 3000) return; errSaveT = Date.now(); try { if (typeof P !== 'undefined' && P && api.autosave) api.autosave(serialize()); } catch {} };
+addEventListener('error', e => { if (!/ResizeObserver loop/.test(e.message)) saveOnError(); }); addEventListener('unhandledrejection', saveOnError);
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -241,8 +246,11 @@ function animateThumb(tw, slide, proj) {
 
 const TPL_COUNT = { museum: 6, saas: 5, journal: 4, aurora: 3, cosmos: 5, nightgallery: 5, redpitch: 5, dusk: 4, editorial: 4, academy: 4, paper: 3, blank: 1 };
 async function renderStart() {
+  const crashed = await api.wasCrashed?.();
   const st = $('#start');
   const rec = api.recovery ? await api.recovery() : null;
+  // after a crash go straight back into the autosaved work
+  if (crashed && rec && rec.data) { openData(rec.data, null); setTimeout(() => toast('Програма перезапустилася після збою — вашу роботу відновлено з автозбереження.'), 600); return; }
   const recent = api.recent ? await api.recent() : [];
   const grid = h('div', { class: 'tgrid' });
   TPL.list.forEach((t, i) => {
@@ -2442,7 +2450,19 @@ async function bakeImage(e) {
   ctx.drawImage(im, (w - dw) * (isNaN(px) ? .5 : px), (hh - dh) * (isNaN(py) ? .5 : py), dw, dh);
   ctx.filter = 'none'; ctx.restore();
   if (s.borderWidth) { ctx.save(); ctx.clip(path); ctx.lineWidth = s.borderWidth * 2; ctx.strokeStyle = s.borderColor || '#c9a45c'; ctx.stroke(path); ctx.restore(); }
-  const needAlpha = s.mask && s.mask !== 'none';
+  // PowerPoint has no "screen"/"lighten" blending: bake it as luminance alpha so dark areas drop out the same way
+  const lightBlend = ['screen', 'lighten', 'plus-lighter', 'color-dodge'].includes(s.blend);
+  if (lightBlend) {
+    const d = ctx.getImageData(0, 0, c.width, c.height), px = d.data;
+    for (let i = 0; i < px.length; i += 4) {
+      const m = Math.max(px[i], px[i + 1], px[i + 2]);
+      if (!m) { px[i + 3] = 0; continue; }
+      const a = m / 255;
+      px[i] = px[i] / a; px[i + 1] = px[i + 1] / a; px[i + 2] = px[i + 2] / a; px[i + 3] = px[i + 3] * a;
+    }
+    ctx.putImageData(d, 0, 0);
+  }
+  const needAlpha = lightBlend || (s.mask && s.mask !== 'none');
   return c.toDataURL(needAlpha ? 'image/png' : 'image/jpeg', .9);
 }
 async function bakeIcon(e) {
@@ -2482,9 +2502,13 @@ async function buildPptx(opts) {
     const sl = pptx.addSlide();
     sl.background = { data: await slideBgImage(s) };
     const list = [];
+    const usedNames = new Set();
     for (const [ei, e] of s.elements.entries()) {
       if (e.hidden) continue;
-      const name = `aurea_${si}_${ei}`;
+      // PowerPoint Morph matches objects whose names start with "!!" and are equal on both slides
+      let name = e.morph ? '!!' + String(e.morph).replace(/[^\w-]/g, '') : '';
+      if (!name || name === '!!' || usedNames.has(name)) name = `aurea_${si}_${ei}`;
+      usedNames.add(name);
       const pos = { x: e.x * PX2IN, y: e.y * PX2IN, w: e.w * PX2IN, h: e.h * PX2IN, rotate: e.rot || 0, objectName: name };
       const st = e.style || {};
       const transp = e.opacity != null && e.opacity < 1 ? Math.round((1 - e.opacity) * 100) : 0;
@@ -2543,15 +2567,39 @@ const PPTX_TRANS = { fade: '<p:fade/>', morph: '<p:fade/>', slide: '<p:push dir=
 function timingXml(list) {
   if (!list.length) return '';
   let id = 3;
-  const eff = (spid, delay, dur, nodeType) => {
-    const a = id++, b = id++, c = id++;
-    return `<p:par><p:cTn id="${a}" presetID="10" presetClass="entr" presetSubtype="0" fill="hold" grpId="0" nodeType="${nodeType}"><p:stCondLst><p:cond delay="${Math.round(delay)}"/></p:stCondLst><p:childTnLst>`
-      + `<p:set><p:cBhvr><p:cTn id="${b}" dur="1" fill="hold"><p:stCondLst><p:cond delay="0"/></p:stCondLst></p:cTn><p:tgtEl><p:spTgt spid="${spid}"/></p:tgtEl><p:attrNameLst><p:attrName>style.visibility</p:attrName></p:attrNameLst></p:cBhvr><p:to><p:strVal val="visible"/></p:to></p:set>`
-      + `<p:animEffect transition="in" filter="fade"><p:cBhvr><p:cTn id="${c}" dur="${Math.round(dur)}"/><p:tgtEl><p:spTgt spid="${spid}"/></p:tgtEl></p:cBhvr></p:animEffect></p:childTnLst></p:cTn></p:par>`;
+  // map Aurea animations to the closest native PowerPoint entrance effects
+  const tgt = (spid) => `<p:tgtEl><p:spTgt spid="${spid}"/></p:tgtEl>`;
+  const prop = (spid, attr, from, to, dur) => `<p:anim calcmode="lin" valueType="num"><p:cBhvr additive="base"><p:cTn id="${id++}" dur="${dur}" fill="hold"/>${tgt(spid)}<p:attrNameLst><p:attrName>${attr}</p:attrName></p:attrNameLst></p:cBhvr><p:tavLst><p:tav tm="0"><p:val><p:strVal val="${from}"/></p:val></p:tav><p:tav tm="100000"><p:val><p:strVal val="${to}"/></p:val></p:tav></p:tavLst></p:anim>`;
+  const fadeIn = (spid, dur, filter = 'fade') => `<p:animEffect transition="in" filter="${filter}"><p:cBhvr><p:cTn id="${id++}" dur="${dur}"/>${tgt(spid)}</p:cBhvr></p:animEffect>`;
+  const FLY = { left: ['ppt_x', '0-#ppt_w/2', 8], right: ['ppt_x', '1+#ppt_w/2', 2], up: ['ppt_y', '1+#ppt_h/2', 4], down: ['ppt_y', '0-#ppt_h/2', 1] };
+  const native = (e, spid, dur) => {
+    const t = e.anim.type, isText = e.type === 'text';
+    if (['fadeUp', 'lines', 'maskUp', 'stagger', 'counter', 'float', 'shine', 'focus', 'blurIn', 'highlight'].includes(t))
+      return { preset: 42, sub: 0, iter: isText && ['stagger', 'maskUp'].includes(t) ? 'wd' : '', body: fadeIn(spid, dur) + prop(spid, 'ppt_x', '#ppt_x', '#ppt_x', dur) + prop(spid, 'ppt_y', '#ppt_y+.1', '#ppt_y', dur) };
+    if (['scaleIn', 'zoomOut', 'bounceIn', 'elastic', 'grow', 'pulse', 'spotlight', 'heartbeat', 'rotateIn', 'flipIn', 'tilt3D', 'rollIn', 'unfold', 'swing'].includes(t))
+      return { preset: 53, sub: 16, body: fadeIn(spid, dur) + prop(spid, 'ppt_w', '0', '#ppt_w', dur) + prop(spid, 'ppt_h', '0', '#ppt_h', dur) };
+    if (t === 'slideLeft' || t === 'drop') {
+      const [attr, from, sub] = FLY[t === 'drop' ? 'down' : (e.anim.dir || 'left')];
+      const other = attr === 'ppt_x' ? 'ppt_y' : 'ppt_x';
+      return { preset: 2, sub, body: prop(spid, attr, from, '#' + attr, dur) + prop(spid, other, '#' + other, '#' + other, dur) };
+    }
+    if (t === 'reveal') return { preset: 22, sub: 4, body: fadeIn(spid, dur, 'wipe(up)') };
+    if (t === 'wipeDown') return { preset: 22, sub: 1, body: fadeIn(spid, dur, 'wipe(down)') };
+    if (t === 'draw') return { preset: 22, sub: 8, body: fadeIn(spid, dur, 'wipe(right)') };
+    if (isText && ['letters', 'typewriter', 'scatter', 'wave'].includes(t)) return { preset: 10, sub: 0, iter: 'lt', body: fadeIn(spid, Math.min(dur, 500)) };
+    return { preset: 10, sub: 0, body: fadeIn(spid, dur) };
+  };
+  const eff = (it, delay, dur, nodeType) => {
+    const spid = it.spid, a = id++, b = id++;
+    const n = native(it.e, spid, Math.round(dur));
+    const iter = n.iter ? `<p:iterate type="${n.iter}"><p:tmPct val="${n.iter === 'wd' ? 30000 : 8000}"/></p:iterate>` : '';
+    return `<p:par><p:cTn id="${a}" presetID="${n.preset}" presetClass="entr" presetSubtype="${n.sub}" fill="hold" grpId="0" nodeType="${nodeType}"><p:stCondLst><p:cond delay="${Math.round(delay)}"/></p:stCondLst>${iter}<p:childTnLst>`
+      + `<p:set><p:cBhvr><p:cTn id="${b}" dur="1" fill="hold"><p:stCondLst><p:cond delay="0"/></p:stCondLst></p:cTn>${tgt(spid)}<p:attrNameLst><p:attrName>style.visibility</p:attrName></p:attrNameLst></p:cBhvr><p:to><p:strVal val="visible"/></p:to></p:set>`
+      + n.body + `</p:childTnLst></p:cTn></p:par>`;
   };
   const group = (items, auto) => {
     const o = id++, inner = id++;
-    const effs = items.map((it, i) => eff(it.spid, auto ? (it.e.anim.delay || 0) : 0, Math.min(2000, Math.max(300, it.e.anim.dur || 700)), i === 0 ? (auto ? 'afterEffect' : 'clickEffect') : 'withEffect')).join('');
+    const effs = items.map((it, i) => eff(it, auto ? (it.e.anim.delay || 0) : 0, Math.min(2000, Math.max(300, it.e.anim.dur || 700)), i === 0 ? (auto ? 'afterEffect' : 'clickEffect') : 'withEffect')).join('');
     return `<p:par><p:cTn id="${o}" fill="hold"><p:stCondLst><p:cond delay="indefinite"/>${auto ? '<p:cond evt="onBegin" delay="0"><p:tn val="2"/></p:cond>' : ''}</p:stCondLst><p:childTnLst><p:par><p:cTn id="${inner}" fill="hold"><p:stCondLst><p:cond delay="0"/></p:stCondLst><p:childTnLst>${effs}</p:childTnLst></p:cTn></p:par></p:childTnLst></p:cTn></p:par>`;
   };
   const autos = list.filter(x => x.e.anim.trigger !== 'click');
@@ -2566,7 +2614,9 @@ async function patchPptxXml(buf, anims, opts) {
     const f = `ppt/slides/slide${i + 1}.xml`;
     let xml = await zip.file(f)?.async('string'); if (!xml) continue;
     let extra = '';
-    if (opts.transitions && i > 0 && s.transition && s.transition !== 'none') extra += `<p:transition spd="med"${s.auto > 0 ? ` advTm="${s.auto * 1000}"` : ''}>${PPTX_TRANS[s.transition] || '<p:fade/>'}</p:transition>`;
+    const adv = s.auto > 0 ? ` advTm="${s.auto * 1000}"` : '';
+    if (opts.transitions && i > 0 && s.transition === 'morph') extra += `<mc:AlternateContent xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"><mc:Choice xmlns:p159="http://schemas.microsoft.com/office/powerpoint/2015/09/main" Requires="p159"><p:transition spd="slow"${adv}><p159:morph option="byObject"/></p:transition></mc:Choice><mc:Fallback><p:transition spd="slow"${adv}><p:fade/></p:transition></mc:Fallback></mc:AlternateContent>`;
+    else if (opts.transitions && i > 0 && s.transition && s.transition !== 'none') extra += `<p:transition spd="med"${adv}>${PPTX_TRANS[s.transition] || '<p:fade/>'}</p:transition>`;
     else if (s.auto > 0) extra += `<p:transition advTm="${s.auto * 1000}"/>`;
     if (opts.anims && list.length) {
       const withIds = list.map(x => { const m = xml.match(new RegExp(`<p:cNvPr id="(\\d+)" name="${x.name}"`)); return m ? { ...x, spid: m[1] } : null; }).filter(Boolean);
@@ -2756,15 +2806,34 @@ function exportPptxDialog() {
         h('div', {}, h('b', { class: 'ok' }, '✓'), 'Фігури, лінії, тіні, картинки (з масками й фільтрами), іконки'),
         h('div', {}, h('b', { class: 'ok' }, '✓'), 'Діаграми — як справжні редаговані діаграми'),
         h('div', {}, h('b', { class: 'ok' }, '✓'), 'Тло слайдів (колір, градієнт, фото) і нотатки доповідача'),
-        h('div', {}, h('b', { class: 'part' }, '≈'), 'Переходи — найближчі стандартні (fade, push, zoom, circle…). Morph стає fade'),
-        h('div', {}, h('b', { class: 'part' }, '≈'), 'Анімації появи — стають простим затуханням з тими ж затримками й кліками'),
-        h('div', {}, h('b', { class: 'no' }, '✕'), 'Не переносяться: morph, лічильники, shine, друкарська машинка, ріст діаграм, живі фони, конфеті, градієнт тексту'),
+        h('div', {}, h('b', { class: 'part' }, '≈'), 'Переходи — найближчі стандартні (fade, push, zoom, circle…). Morph — справжній «Морфінг» PowerPoint'),
+        h('div', {}, h('b', { class: 'part' }, '≈'), 'Анімації появи — найближчі ефекти PowerPoint (виринання, масштаб, виліт, поява смугами, по словах і по буквах) з тими ж затримками й кліками'),
+        h('div', {}, h('b', { class: 'no' }, '✕'), 'Не переносяться: лічильники, shine, друкарська машинка, ріст діаграм, живі фони, конфеті, градієнт тексту'),
         h('div', {}, h('b', { class: 'part' }, '!'), 'Шрифти мають бути встановлені на комп’ютері, де відкривають файл')),
       tglIn('Переносити переходи між слайдами', true, v => { o.transitions = v; }),
-      tglIn('Переносити анімації як просте затухання', true, v => { o.anims = v; }),
+      tglIn('Переносити анімації появи', true, v => { o.anims = v; }),
       h('p', { class: 'hint' }, 'Якщо інша програма скаже, що файл треба «відновити», — експортуйте ще раз без анімацій.'),
       h('div', { class: 'row', style: 'margin-top:14px' }, h('div', { class: 'spacer' }), h('button', { class: 'btn', onclick: close }, 'Скасувати'),
         h('button', { class: 'btn-primary', onclick: async () => { close(); await exportPptx(o); } }, icon('export'), 'Експортувати .pptx'))));
+  document.body.append(m);
+}
+// fonts that PowerPoint will substitute unless they are installed on the computer that opens the file
+const SYSTEM_FONTS = /^(arial|calibri|cambria|georgia|segoe ui|times new roman|verdana|tahoma|trebuchet ms|courier new|consolas|impact)$/i;
+function usedFonts() {
+  const f = new Set();
+  for (const s of P.slides) for (const e of s.elements) { const n = e.style && e.style.font; if (n && !SYSTEM_FONTS.test(n)) f.add(n); }
+  return [...f].sort();
+}
+function pptxFontsNote() {
+  const fonts = usedFonts(); if (!fonts.length) return;
+  const close = () => m.remove();
+  const m = h('div', { class: 'modal-bg', onclick: (e) => { if (e.target === m) close(); } },
+    h('div', { class: 'modal glass', style: 'width:min(560px,92vw)' },
+      h('h2', {}, 'Шрифти для PowerPoint'),
+      h('p', { class: 'hint', style: 'font-size:13px;margin:-6px 0 12px' }, 'Щоб текст виглядав так само, встановіть ці безкоштовні шрифти на комп’ютері, де відкриватимуть файл. Інакше PowerPoint підставить схожий.'),
+      h('div', { class: 'hlist' }, ...fonts.map(n => h('div', { class: 'hitem' }, h('b', {}, n),
+        h('button', { class: 'btn sm', onclick: () => api.openLink?.('https://fonts.google.com/specimen/' + n.replace(/ /g, '+')) }, 'Завантажити')))),
+      h('div', { class: 'row', style: 'margin-top:14px' }, h('div', { class: 'spacer' }), h('button', { class: 'btn-primary', onclick: close }, 'Зрозуміло'))));
   document.body.append(m);
 }
 async function exportPptx(o = { transitions: true, anims: true }) {
@@ -2772,7 +2841,7 @@ async function exportPptx(o = { transitions: true, anims: true }) {
     const buf = await buildPptx(o);
     busy(false);
     const p = await api.savePptx({ b64: ab2b64(buf), name: P.title });
-    if (p) toast('Файл .pptx збережено.', { label: 'Показати файл', fn: () => api.showItem(p) });
+    if (p) { toast('Файл .pptx збережено.', { label: 'Показати файл', fn: () => api.showItem(p) }); pptxFontsNote(); }
     return buf;
   } catch (e) { busy(false); toast('Помилка експорту .pptx: ' + e.message); console.error(e); }
 }
